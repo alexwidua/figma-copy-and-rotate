@@ -9,7 +9,9 @@ interface ItemProps extends Partial<PreviewProps> {
 	index: number
 	x: number
 	y: number
-	itemSize: number
+	// itemSize: number
+	itemHeight: number
+	itemWidth: number
 	angle: number
 	elevateClick: Function
 }
@@ -18,7 +20,9 @@ const Item = ({
 	index,
 	x,
 	y,
-	itemSize,
+	// itemSize,
+	itemHeight,
+	itemWidth,
 	angle,
 	selectionState,
 	selectionRotation,
@@ -43,8 +47,8 @@ const Item = ({
 		(skipSelect === 'specific' && specific.includes(index + 1))
 
 	const inlineItem = {
-		width: itemSize,
-		height: itemSize,
+		width: itemWidth,
+		height: itemHeight,
 		top: y,
 		left: x,
 		border: showRadiusBadge
@@ -60,7 +64,7 @@ const Item = ({
 		background: isSkipped ? 'none' : 'var(--color-item-fill)'
 	}
 
-	const inlineBadge = {
+	const inlineIndex = {
 		opacity: showNumBadge ? 1 : 0,
 		background: isSkipped
 			? 'var(--color-item-inactive)'
@@ -78,7 +82,7 @@ const Item = ({
 						rotateItems ? angle * -1 + rotation + 90 : 0
 					}deg)`
 				}}>
-				<span class={style.numBadge} style={inlineBadge}>
+				<span class={style.index} style={inlineIndex}>
 					{index + 1}
 				</span>
 			</span>

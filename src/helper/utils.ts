@@ -9,15 +9,16 @@
  */
 export function createComponentInPlace(selection: SceneNode): ComponentNode {
 	let node: ComponentNode = figma.createComponent()
+
 	const w: number = selection.width
 	const h: number = selection.height
 
 	// Deal with line and vector nodes with width/height of 0
-	const hasZeroDimension: boolean = h === 0 || w === 0
-	const widerThanHigher: boolean = w > h
-	const inherit: number = widerThanHigher ? w : h
+	const isHairline: boolean = h === 0 || w === 0
+	const isWiderOrSquare: boolean = w >= h
+	const inherit: number = isWiderOrSquare ? w : h
 
-	if (hasZeroDimension) {
+	if (isHairline) {
 		node.resizeWithoutConstraints(inherit, inherit)
 	} else {
 		node.resizeWithoutConstraints(selection.width, selection.height)
@@ -37,9 +38,9 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 	node.y = tempY
 	node.rotation = tempDeg
 
-	if (hasZeroDimension) {
+	if (isHairline) {
 		const rad: number = node.rotation * (Math.PI / 180)
-		if (widerThanHigher) {
+		if (isWiderOrSquare) {
 			selection.y = selection.x + inherit / 2
 			node.x = node.x - (inherit / 2) * Math.sin(rad)
 			node.y = node.y - (inherit / 2) * Math.cos(rad)

@@ -3,6 +3,12 @@
  */
 
 /**
+ * Base rotation that is applied to transformation.
+ * -90 because Figma sets origin (0°) to 3 o'clock.
+ */
+export const baseDeg: number = -90
+
+/**
  * @param node {SceneNode} - Node that will be instantiated and rotated
  * @param items {Number} - Number of copies
  * @param radius {Number} - Radius of circle
@@ -32,39 +38,42 @@ export function instantiateAndRotate(
 		const initDeg: number = Math.round(node.rotation) * -1
 		const initRad: number = initDeg * (Math.PI / 180)
 
-		const w: number = node.width
-		const h: number = node.height
-		const d: number = radius * 2
-		const baseDeg: number = -90
+		const w: number = node.width / 2
+		const h: number = node.height / 2
+		const r = radius
+		const d: number = r * 2
+
 		// (items - 1) to account for the offset of the sweep slider
 		const deg: number = baseDeg + (sweepAngle / (numItems - 1)) * i
 		const rad: number = deg * (Math.PI / 180)
 
 		// If the cloned node isn't square, it will skew the circle and radius.
 		// We account for that by normalizing both radius and arc.
-		const diff: number = Math.abs(e.width - e.height)
+		const diff: number = Math.abs(w - h)
 		const normalizeShape: number =
-			e.width >= e.height
-				? -((diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180)))
-				: (diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180))
+			w >= h
+				? -(diff * Math.cos(Math.abs(deg) * (Math.PI / 180)))
+				: diff * Math.cos(Math.abs(deg) * (Math.PI / 180))
 		const normalizeRadius: number =
 			w === h
 				? 0
 				: w > h
-				? -(h / 2) * Math.sin(Math.abs(initRad))
-				: (w / 2) * Math.sin(Math.abs(initRad))
+				? -diff * Math.sin(Math.abs(initRad))
+				: diff * Math.sin(Math.abs(initRad))
+
+		console.log(normalizeRadius)
 
 		// 2. Rotate the cloned nodes using affine transformation
 		const translateX: number =
-			(radius + w / 2 - normalizeRadius) * Math.cos(rad) +
-			(w / 2) * Math.sin(rad) +
-			(d + w) / 2 +
+			(r + w - normalizeRadius) * Math.cos(rad) +
+			w * Math.sin(rad) +
+			(d + w * 2) / 2 +
 			normalizeShape
 
 		const translateY: number =
-			(radius + h / 2 - normalizeRadius) * Math.sin(rad) -
-			(h / 2) * Math.cos(rad) +
-			(d + h) / 2
+			(r + h - normalizeRadius) * Math.sin(rad) -
+			h * Math.cos(rad) +
+			(d + h * 2) / 2
 
 		const radialTransform: Transform = [
 			[Math.cos(rad), -Math.sin(rad), translateX],
@@ -86,8 +95,8 @@ export function instantiateAndRotate(
 		const sin: number = Math.sin(initRad)
 		const cos: number = Math.cos(initRad)
 
-		e.x = x + (w / 2) * (1 - sin) - (w / 2) * (1 - cos)
-		e.y = y + (h / 2) * (1 - sin) - (h / 2) * (1 - cos) + h * sin
+		e.x = x + w * (1 - sin) - w * (1 - cos)
+		e.y = y + h * (1 - sin) - h * (1 - cos) + h * sin
 
 		// 4. Restore the original node's rotation
 		// TODO: Refactor & merge into one transform
@@ -101,15 +110,9 @@ export function instantiateAndRotate(
 
 		// Rotate nodes around their center(since 0,0 of a node is top-left)
 		const transformOriginX: number =
-			w / 2 -
-			(w / 2) * Math.cos(newRad) +
-			(h / 2) * Math.sin(newRad) -
-			(w / 2) * Math.sin(rad)
+			w - w * Math.cos(newRad) + h * Math.sin(newRad) - w * Math.sin(rad)
 		const transformOriginY: number =
-			h / 2 -
-			(w / 2) * Math.sin(newRad) -
-			(h / 2) * Math.cos(newRad) +
-			(h / 2) * Math.cos(rad)
+			h - w * Math.sin(newRad) - h * Math.cos(newRad) + h * Math.cos(rad)
 
 		const preserveRotation: Transform = [
 			[Math.cos(newRad), -Math.sin(newRad), transformOriginX],

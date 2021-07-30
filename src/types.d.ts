@@ -10,13 +10,13 @@ interface UIProps {
 }
 
 interface PreviewProps {
+	uiWidth: number
 	selectionState: string
-	width: number
-	numItems: string
 	selectionHeight: number
 	selectionWidth: number
 	selectionRotation: number
-	radius: string
+	numItems: string
+	itemRadius: string
 	skipSelect: string
 	skipSpecific: string
 	skipEvery: string

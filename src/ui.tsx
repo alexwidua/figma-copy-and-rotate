@@ -228,13 +228,13 @@ const Plugin = ({ selection, ui }: UIProps) => {
 	return (
 		<div>
 			<Preview
+				uiWidth={ui.width}
 				selectionState={selectionState}
-				width={ui.width}
-				numItems={numItems}
 				selectionHeight={selectionDimensions.height}
 				selectionWidth={selectionDimensions.width}
 				selectionRotation={selectionDimensions.rotation}
-				radius={radius}
+				numItems={numItems}
+				itemRadius={radius}
 				skipSelect={skipSelect}
 				skipSpecific={skipSpecific}
 				skipEvery={skipEvery}

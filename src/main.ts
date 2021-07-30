@@ -54,7 +54,6 @@ export default function () {
 	const handleSelectionChange = () => {
 		const data = querySelection(figma.currentPage.selection, validNodeTypes)
 
-		//console.log(figma.currentPage.selection[0].type)
 		emit('SELECTION_CHANGE', { ...data, adaptiveRadius })
 	}
 

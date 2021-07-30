@@ -5,16 +5,17 @@
 import { h } from 'preact'
 import style from './style.css'
 
+import { baseDeg } from '../../core/transform'
 import Item from './item'
 
 const Preview = ({
+	uiWidth,
 	selectionState,
-	width,
-	numItems,
 	selectionWidth,
 	selectionHeight,
 	selectionRotation,
-	radius,
+	numItems,
+	itemRadius,
 	skipSelect,
 	skipSpecific,
 	skipEvery,
@@ -26,42 +27,69 @@ const Preview = ({
 	onInstanceClick,
 	children
 }: PreviewProps) => {
-	const itemBaseSize: number = 60
-	const selectionAverage: number = (selectionWidth + selectionHeight) / 2
-	const factor: number = Math.min(
-		(parseInt(radius) * 2) / selectionAverage / 2,
-		10
-	)
-	const itemSize: number = itemBaseSize / Math.max(factor, 1)
+	// Padding of items to preview container bounds
+	const padding: number = 80
 
-	const r: number = itemSize * factor
-	const d: number = r * 2
+	const length: number = parseInt(numItems)
+	const width: number = selectionWidth
+	const height: number = selectionHeight
+	const isWiderOrSquare: boolean = width >= height
+	const radius: number = parseInt(itemRadius)
+	const diameter: number = radius * 2
+
+	// Scale items down if item size + radius exceed preview container bounds
+	const factor: number = isWiderOrSquare
+		? (width * 2 + diameter) / (uiWidth - padding)
+		: (height * 2 + diameter) / (uiWidth - padding)
+
+	const proportionalHeight = height / factor
+	const proportionalWidth = width / factor
+	const proportionalRadius = radius / factor
 
 	/**
 	 * Map items radially
 	 */
-	const circle = Array.from({ length: parseInt(numItems) }, (e, i) => {
-		const baseDeg: number = -90
-		// (numItems - 1) to account for the offset of the sweep slider
+	const circle = Array.from({ length }, (e, i) => {
+		// Pulled from ./core/transform.ts
 		const deg: number =
 			baseDeg + (sweepAngle / (parseInt(numItems) - 1)) * i
 		const rad: number = deg * (Math.PI / 180)
 
+		// Normalize shape if item is oblong
+		const diff: number = Math.abs(proportionalWidth - proportionalHeight)
+		const normalizeShape: number =
+			proportionalWidth >= proportionalHeight
+				? -((diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180)))
+				: (diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180))
+
+		const normRadian: number = selectionRotation * (Math.PI / 180)
+		const normalizeRadius: number =
+			proportionalWidth === proportionalHeight
+				? 0
+				: proportionalWidth > proportionalHeight
+				? -proportionalHeight * Math.sin(Math.abs(normRadian))
+				: proportionalWidth * Math.sin(Math.abs(normRadian))
+
 		const x: number =
-			(r + itemSize / 2) * Math.cos(rad) +
-			(d + itemSize) / 2 -
-			itemSize / 2
+			(proportionalRadius + proportionalWidth / 2 - normalizeRadius) *
+				Math.cos(rad) +
+			(proportionalRadius * 2 + proportionalWidth) / 2 -
+			proportionalWidth / 2 +
+			normalizeShape
+
 		const y: number =
-			(r + itemSize / 2) * Math.sin(rad) +
-			(d + itemSize) / 2 -
-			itemSize / 2
+			(proportionalRadius + proportionalHeight / 2 - normalizeRadius) *
+				Math.sin(rad) +
+			(proportionalRadius * 2 + proportionalHeight) / 2 -
+			proportionalHeight / 2
 
 		return (
 			<Item
 				index={i}
 				x={x}
 				y={y}
-				itemSize={itemSize}
+				itemHeight={proportionalHeight}
+				itemWidth={proportionalWidth}
 				angle={deg}
 				selectionState={selectionState}
 				selectionRotation={selectionRotation}
@@ -76,39 +104,41 @@ const Preview = ({
 		)
 	})
 
+	const inlineContainer = {
+		height: proportionalRadius * 2 + proportionalHeight,
+		width: proportionalRadius * 2 + proportionalWidth,
+		pointerEvents: isSweeping ? 'none' : 'all'
+	}
+
+	const inlineCircumference = {
+		height: isWiderOrSquare
+			? proportionalRadius * 2 + proportionalWidth
+			: proportionalRadius * 2 + proportionalHeight,
+		width: isWiderOrSquare
+			? proportionalRadius * 2 + proportionalWidth
+			: proportionalRadius * 2 + proportionalHeight
+	}
+
+	const inlineRadius = {
+		opacity: showRadiusBadge ? 1 : 0
+	}
+
+	const inlineDistance = {
+		height: `${parseInt(itemRadius) / factor}px`,
+		top: `${(parseInt(itemRadius) / factor) * -1}px`
+	}
+
 	return (
-		<div class={style.wrapper} style={{ width, height: width }}>
+		<div class={style.wrapper} style={{ width: uiWidth, height: uiWidth }}>
 			{children}
-			<div
-				class={style.container}
-				style={{
-					height: d + itemSize,
-					width: d + itemSize,
-					pointerEvents: isSweeping ? 'none' : 'all'
-				}}>
+			<div class={style.container} style={inlineContainer}>
+				<div class={style.circumference} style={inlineCircumference} />
 				{circle}
-				<span
-					class={style.radiusIndicator}
-					style={{
-						opacity: showRadiusBadge ? 1 : 0
-					}}>
-					<span
-						class={style.radiusLine}
-						style={{
-							height: `${itemSize * factor}px`,
-							top: `${itemSize * factor * -1}px`
-						}}
-					/>
-					<span class={style.radiusBadge}>{radius}</span>
-					<span
-						class={style.radiusOrigin}
-						style={{ transform: 'rotate(45deg)' }}
-					/>
-					<span
-						class={style.radiusOrigin}
-						style={{ transform: 'rotate(-45deg)' }}
-					/>
-				</span>
+				<div class={style.radius} style={inlineRadius}>
+					<div class={style.distance} style={inlineDistance} />
+					<span class={style.badge}>{radius}</span>
+					<span class={style.origin} />
+				</div>
 			</div>
 		</div>
 	)
