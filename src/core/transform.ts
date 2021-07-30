@@ -34,6 +34,7 @@ export function instantiateAndRotate(
 
 		const w: number = node.width
 		const h: number = node.height
+		const d: number = radius * 2
 		const baseDeg: number = -90
 		// (items - 1) to account for the offset of the sweep slider
 		const deg: number = baseDeg + (sweepAngle / (numItems - 1)) * i
@@ -46,20 +47,24 @@ export function instantiateAndRotate(
 			e.width >= e.height
 				? -((diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180)))
 				: (diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180))
-
 		const normalizeRadius: number =
-			e.width >= e.height
-				? (diff / 2) * Math.round(Math.sin(initRad))
-				: (diff / 2) * Math.round(Math.sin(initRad))
+			w === h
+				? 0
+				: w > h
+				? -(h / 2) * Math.sin(Math.abs(initRad))
+				: (w / 2) * Math.sin(Math.abs(initRad))
 
 		// 2. Rotate the cloned nodes using affine transformation
 		const translateX: number =
 			(radius + w / 2 - normalizeRadius) * Math.cos(rad) +
 			(w / 2) * Math.sin(rad) +
+			(d + w) / 2 +
 			normalizeShape
+
 		const translateY: number =
 			(radius + h / 2 - normalizeRadius) * Math.sin(rad) -
-			(h / 2) * Math.cos(rad)
+			(h / 2) * Math.cos(rad) +
+			(d + h) / 2
 
 		const radialTransform: Transform = [
 			[Math.cos(rad), -Math.sin(rad), translateX],
