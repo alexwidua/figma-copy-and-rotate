@@ -1,0 +1,45 @@
+/* Wrap the ui library's <TextBox/> component to display a clear icon after value input */
+.textboxWrapper {
+	--local-icon-stroke-width: 1px;
+	--local-icon-size: 12px;
+	--local-icon-padding-right: 8px;
+
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.textboxClear {
+	position: absolute;
+	top: 50%;
+	right: var(--local-icon-padding-right);
+	z-index: 100;
+	width: var(--local-icon-size);
+	height: var(--local-icon-size);
+	background: var(--color-local-accent);
+	border-radius: 100%;
+	transform: translateY(-50%);
+	cursor: pointer;
+}
+
+.textboxClear::before {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: var(--local-icon-stroke-width);
+	height: calc(var(--local-icon-size) / 2);
+	background: #fff;
+	transform: translateY(-50%) translateX(-50%) rotate(-45deg);
+	content: '';
+}
+
+.textboxClear::after {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: var(--local-icon-stroke-width);
+	height: calc(var(--local-icon-size) / 2);
+	background: #fff;
+	transform: translateY(-50%) translateX(-50%) rotate(45deg);
+	content: '';
+}

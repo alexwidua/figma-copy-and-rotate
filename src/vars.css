@@ -1,0 +1,24 @@
+/**
+ * @file Local variables
+ */
+
+:root {
+	--color-local-white: var(--color-white);
+	--color-local-accent: var(--color-blue);
+	--color-local-disabled: rgb(110, 110, 110);
+
+	--color-container-bg: #f3f3f3;
+	--color-container-assistive: #cacaca;
+
+	--color-item-fill: var(--color-local-white);
+	--color-item-border: var(--color-local-white);
+	--color-item-inactive: #c7c7c7;
+
+	--item-border-active: 1px solid var(--color-local-accent);
+	--item-border-inactive: 1px solid var(--color-local-white);
+	--item-border-deselected: 1px dashed var(--color-container-assistive);
+}
+
+body {
+	overflow: hidden;
+}
