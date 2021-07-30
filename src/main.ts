@@ -7,26 +7,22 @@ import { instantiateAndRotate } from './core/transform'
 import {
 	createComponentInPlace,
 	setSharedData,
-	querySelection
+	validateSelection
 } from './helper/utils'
 
 export default function () {
 	/**
-	 * Init
+	 * Initial data that is sent to UI on plugin startup
 	 */
-	const ui: UIOptions = { width: 280, height: 502 }
-	const data: UIPayload = {
+	const ui: UISettings = { width: 280, height: 502 }
+	const initialData = {
 		selection: {
-			width: figma.currentPage.selection[0]?.width
-				? figma.currentPage.selection[0].width
-				: 100,
-			height: figma.currentPage.selection[0]?.height
-				? figma.currentPage.selection[0].height
-				: 100
+			width: figma.currentPage.selection[0]?.width || 100,
+			height: figma.currentPage.selection[0]?.height || 100,
+			rotation: figma.currentPage.selection[0]?.rotation || 0
 		},
 		ui
 	}
-	//const validNodeTypes = ['RECTANGLE', 'COMPONENT']
 	const validNodeTypes = [
 		'BOOLEAN_OPERATION',
 		'COMPONENT',
@@ -42,19 +38,26 @@ export default function () {
 		'VECTOR'
 	]
 
-	// Use adaptive radius (r = node.height + node.width / 2) after plugin launch
-	// so user doesn't get confused if the selected node is large and the radius is too small
-	let adaptiveRadius = true
-
-	showUI(ui, data)
+	showUI(ui, initialData)
 
 	/**
 	 * Event handlers
 	 */
 	const handleSelectionChange = () => {
-		const data = querySelection(figma.currentPage.selection, validNodeTypes)
+		// const data: PluginSelectionMsg = querySelection(
+		// 	figma.currentPage.selection,
+		// 	validNodeTypes
+		// )
+		const msg: SelectionMessage = {
+			msg: validateSelection(figma.currentPage.selection, validNodeTypes),
+			selection: {
+				width: figma.currentPage.selection[0]?.width,
+				height: figma.currentPage.selection[0]?.height,
+				rotation: figma.currentPage.selection[0]?.rotation
+			}
+		}
 
-		emit('SELECTION_CHANGE', { ...data, adaptiveRadius })
+		emit('SELECTION_CHANGE', msg)
 	}
 
 	function handleClick(props: RadialTransform) {
@@ -174,8 +177,6 @@ export default function () {
 	 * Event listeners
 	 */
 	on('GENERATE', handleClick)
-	once('DISABLE_ADAPTIVE_RADIUS', () => {
-		adaptiveRadius = false
-	})
+
 	figma.on('selectionchange', handleSelectionChange)
 }

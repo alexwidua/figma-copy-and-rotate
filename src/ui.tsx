@@ -3,7 +3,7 @@
  */
 
 import { h } from 'preact'
-import { useState } from 'preact/hooks'
+import { useState, useEffect } from 'preact/hooks'
 import { on, emit } from '@create-figma-plugin/utilities'
 import {
 	render,
@@ -40,9 +40,23 @@ interface buttonStates {
 
 const Plugin = ({ selection, ui }: UIProps) => {
 	/**
-	 * States
+	 * 💅 UI options
 	 */
+	const skipSelectOptions: Array<DropdownOption> = [
+		{ children: 'Skip instances', value: 'specific' },
+		{ children: 'Skip every', value: 'every' }
+	]
+	const buttonStates: buttonStates = {
+		EMPTY: 'No items selected',
+		INVALID: 'Node type not supported',
+		VALID_UPDATEABLE: 'Update items',
+		VALID_NONUPDATEABLE: 'Rotate items',
+		MULTIPLE: 'Group multiple nodes before rotation'
+	}
 
+	/**
+	 * 💾 States
+	 */
 	// UI exposed states
 	const [numItems, setNumItems] = useState<string>('8')
 	const [radius, setRadius] = useState<string>(
@@ -67,23 +81,19 @@ const Plugin = ({ selection, ui }: UIProps) => {
 	const [sweep, setSweep] = useState<boolean>(false)
 
 	/**
-	 * UI options
+	 * 📎 Hooks
 	 */
-	const skipSelectOptions: Array<DropdownOption> = [
-		{ children: 'Skip instances', value: 'specific' },
-		{ children: 'Skip every', value: 'every' }
-	]
-	// For generate button
-	const buttonMap: buttonStates = {
-		EMPTY: 'No items selected',
-		INVALID: 'Node type not supported',
-		VALID_UPDATEABLE: 'Update items',
-		VALID_NONUPDATEABLE: 'Rotate items',
-		MULTIPLE: 'Group multiple nodes before rotation'
-	}
+	useEffect(() => {
+		if (selection) {
+			// Set adaptive radius on startup
+			const { width, height } = selection
+			const average = (width + height) / 2
+			setRadius((average / 2).toFixed(1))
+		}
+	}, [])
 
 	/**
-	 *  Event handlers
+	 *  💪 Event handlers
 	 */
 	function handleNumItemsInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
 		const value = e.currentTarget.value
@@ -98,9 +108,6 @@ const Plugin = ({ selection, ui }: UIProps) => {
 			setRadius(e.currentTarget.value)
 		}
 		setShowRadiusBadge(true)
-
-		// Disable adaptive radius after user interacted
-		emit('DISABLE_ADAPTIVE_RADIUS')
 	}
 
 	function handleSkipSelectMenu(
@@ -165,16 +172,30 @@ const Plugin = ({ selection, ui }: UIProps) => {
 			sweepAngle
 		})
 
-		// If we generate a circle, the selected node will be always updateable
+		// Additionally set selection state because generated node is always updateable.
 		setSelectionState('VALID_UPDATEABLE')
 	}
 
 	/**
+	 * 👂 Event listeners
+	 */
+	function handleSelectionChange({ msg, selection }: SelectionMessage) {
+		setSelectionState(msg)
+
+		// 'VALID_UPDATEABLE' or 'VALID_NONUPDATEABLE'
+		if (selection && msg[0] === 'V') {
+			const { width, height, rotation } = selection
+
+			setSelectionDimensions({ width, height, rotation })
+		}
+	}
+
+	// Listen to messages from plugin side
+	on('SELECTION_CHANGE', handleSelectionChange)
+
+	/**
 	 *  Validators
 	 */
-
-	// Validate min value here since setting the minimum prop to min={1} prevents entering
-	// numbers that start with 1
 	function validateMinValue(
 		value: null | number,
 		min: number
@@ -184,6 +205,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 
 	function validateSkipSpecific(value: string): string | boolean {
 		const split = value.split(',')
+
 		// Check if not empty, is number > 0 (since 0 is OG node) and whole number
 		const temp = split.filter(
 			(e) => e && parseFloat(e) > 0 && parseFloat(e) % 1 == 0
@@ -197,33 +219,6 @@ const Plugin = ({ selection, ui }: UIProps) => {
 			value === ''
 		)
 	}
-
-	/**
-	 * Event listeners
-	 */
-
-	function handleSelectionChange({
-		msg,
-		dimensions,
-		adaptiveRadius
-	}: PluginSelectionMsg) {
-		setSelectionState(msg)
-
-		// 'VALID_UPDATEABLE' or 'VALID_NONUPDATEABLE'
-		if (dimensions && msg[0] === 'V') {
-			const { width, height, rotation } = dimensions
-
-			setSelectionDimensions({ width, height, rotation })
-
-			if (adaptiveRadius) {
-				const average = (width + height) / 2
-				setRadius((average / 2).toFixed(1))
-			}
-		}
-	}
-
-	// Listen to messages from plugin side
-	on('SELECTION_CHANGE', handleSelectionChange)
 
 	return (
 		<div>
@@ -342,7 +337,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 								? 'var(--color-local-accent)'
 								: 'var(--color-local-disabled)'
 					}}>
-					{(buttonMap as any)[selectionState]}
+					{(buttonStates as any)[selectionState]}
 				</Button>
 			</Container>
 		</div>

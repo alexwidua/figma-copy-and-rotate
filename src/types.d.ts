@@ -36,15 +36,6 @@ interface SliderProp {
 }
 
 /**
- * Exclusive UI
- */
-
-interface UIOptions {
-	height: number
-	width: number
-}
-
-/**
  * From ui to plugin
  */
 
@@ -58,23 +49,21 @@ interface RadialTransform {
 	sweepAngle: number
 }
 
-/**
- * From plugin to UI
- */
-interface PluginSelectionMsg {
-	msg: string
-	dimensions?: {
-		width: number
-		height: number
-		rotation: number
-	}
-	adaptiveRadius: boolean
+interface SelectionDimensions {
+	width: number
+	height: number
+	rotation: number
 }
 
-interface UIPayload {
-	selection: {
-		width: number
-		height: number
-	}
-	[key: string]: UIOptions
+/**
+ * Event message that is sent from plugin to UI
+ */
+interface SelectionMessage {
+	msg: string
+	selection: SelectionDimensions
+}
+
+interface UISettings {
+	height: number
+	width: number
 }

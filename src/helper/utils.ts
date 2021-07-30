@@ -85,18 +85,18 @@ export function setSharedData(
 }
 
 /**
- * Query current selection and return message for UI to update accordingly.
+ * Validates current selected node.
  * @param selection {ReadonlyArray<SceneNode>} - Current page selection
  * @param validNodes {Array<String>} - Array containing all valid node types
- * @returns {SelectionMsg}
+ * @returns {String}
  */
-export function querySelection(
+export function validateSelection(
 	selection: ReadonlyArray<SceneNode>,
 	validNodes: Array<String>
-) {
+): string {
 	if (selection.length) {
 		if (selection.length > 1) {
-			return { msg: 'MULTIPLE' }
+			return 'MULTIPLE'
 		}
 
 		const node: SceneNode = selection[0]
@@ -106,23 +106,18 @@ export function querySelection(
 				'radial_items',
 				'parentGroup'
 			)
-			const dimensions = {
-				width: node.width,
-				height: node.height,
-				rotation: node.rotation
-			}
 			if (
 				node.parent?.id === hasParentID ||
 				node.parent?.parent?.id === hasParentID
 			) {
-				return { msg: 'VALID_UPDATEABLE', dimensions }
+				return 'VALID_UPDATEABLE'
 			} else {
-				return { msg: 'VALID_NONUPDATEABLE', dimensions }
+				return 'VALID_NONUPDATEABLE'
 			}
 		} else {
-			return { msg: 'INVALID' }
+			return 'INVALID'
 		}
 	} else {
-		return { msg: 'EMPTY' }
+		return 'EMPTY'
 	}
 }
