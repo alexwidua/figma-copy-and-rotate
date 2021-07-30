@@ -59,7 +59,7 @@ const Item = ({
 				: 'var(--item-border-active)'
 			: 'var(--item-border-inactive)',
 		transform: `rotate(${
-			rotateItems ? angle + (rotation + 90) * -1 : 0
+			rotateItems ? angle + (rotation + 90) * -1 : rotation + 90
 		}deg)`,
 		background: isSkipped ? 'none' : 'var(--color-item-fill)'
 	}
