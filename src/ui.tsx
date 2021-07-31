@@ -22,31 +22,17 @@ import {
 import './vars.css'
 import style from './style.css'
 import Preview from './components/Preview'
-import Slider from './components/Slider'
+import Slider from './components/Preview/Slider'
 
-interface UISelectionDimensions {
-	height: number
-	width: number
-	rotation: number
-}
-
-interface buttonStates {
-	EMPTY: string
-	INVALID: string
-	VALID_UPDATEABLE: string
-	VALID_NONUPDATEABLE: string
-	MULTIPLE: string
-}
-
-const Plugin = ({ selection, ui }: UIProps) => {
+const Plugin = ({ selection, ui }: any) => {
 	/**
 	 * 💅 UI options
 	 */
 	const skipSelectOptions: Array<DropdownOption> = [
-		{ children: 'Skip instances', value: 'specific' },
-		{ children: 'Skip every', value: 'every' }
+		{ children: 'Skip instances', value: 'SPECIFIC' },
+		{ children: 'Skip every', value: 'EVERY' }
 	]
-	const buttonStates: buttonStates = {
+	const buttonMap: SelectionTypeMap = {
 		EMPTY: 'No items selected',
 		INVALID: 'Node type not supported',
 		VALID_UPDATEABLE: 'Update items',
@@ -55,30 +41,35 @@ const Plugin = ({ selection, ui }: UIProps) => {
 	}
 
 	/**
+	 * Vars
+	 */
+
+	const initLayout: SelectionLayout = {
+		height: selection.height,
+		width: selection.width,
+		rotation: 0
+	}
+	const adaptiveRadius: number = (selection.width + selection.height) / 4
+
+	/**
 	 * 💾 States
 	 */
 	// UI exposed states
 	const [numItems, setNumItems] = useState<string>('8')
-	const [radius, setRadius] = useState<string>(
-		((selection.width + selection.height) / 4).toFixed(1)
-	)
-	const [skipSelect, setSkipSelect] = useState<string>('specific')
+	const [radius, setRadius] = useState<string>(adaptiveRadius.toFixed(0))
+	const [skipSelect, setSkipSelect] = useState<SkipType>('SPECIFIC')
 	const [skipSpecific, setSkipSpecific] = useState<string>('')
 	const [skipEvery, setSkipEvery] = useState<string>('')
 	const [rotateItems, setRotateItems] = useState<boolean>(true)
 	const [sweepAngle, setSweepAngle] = useState<number>(360)
 
 	// Internal states
-	const [selectionDimensions, setSelectionDimensions] =
-		useState<UISelectionDimensions>({
-			height: selection.height,
-			width: selection.width,
-			rotation: 0
-		})
-	const [selectionState, setSelectionState] = useState<string>('EMPTY')
+	const [selectionLayout, setSelectionLayout] =
+		useState<SelectionLayout>(initLayout)
+	const [selectionState, setSelectionState] = useState<SelectionType>('EMPTY')
 	const [showRadiusBadge, setShowRadiusBadge] = useState<boolean>(false)
 	const [showNumBadge, setShowNumBadge] = useState<boolean>(false)
-	const [sweep, setSweep] = useState<boolean>(false)
+	const [isSweeping, setIsSweeping] = useState<boolean>(false)
 
 	/**
 	 * 📎 Hooks
@@ -95,6 +86,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 	/**
 	 *  💪 Event handlers
 	 */
+
 	function handleNumItemsInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
 		const value = e.currentTarget.value
 		if (parseFloat(value) > 1 && parseFloat(value) % 1 == 0) {
@@ -110,33 +102,27 @@ const Plugin = ({ selection, ui }: UIProps) => {
 		setShowRadiusBadge(true)
 	}
 
-	function handleSkipSelectMenu(
-		event: h.JSX.TargetedEvent<HTMLInputElement>
-	) {
-		setSkipSelect(event.currentTarget.value)
+	function handleSkipSelectMenu(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+		setSkipSelect(e.currentTarget.value as SkipType)
 	}
 
-	function handleSkipSpecificInput(
-		event: h.JSX.TargetedEvent<HTMLInputElement>
-	) {
-		const value = event.currentTarget.value
+	function handleSkipSpecificInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+		const value = e.currentTarget.value
 		setSkipSpecific(value)
 	}
 
-	function handleSkipEveryInput(
-		event: h.JSX.TargetedEvent<HTMLInputElement>
-	) {
-		const value = event.currentTarget.value
+	function handleSkipEveryInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+		const value = e.currentTarget.value
 		setSkipEvery(value)
 	}
 
-	function handleRotateItems(event: h.JSX.TargetedEvent<HTMLInputElement>) {
-		const value = event.currentTarget.checked
+	function handleRotateItems(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+		const value = e.currentTarget.checked
 		setRotateItems(value)
 	}
 
 	function handleInstanceClick(index: number) {
-		setSkipSelect('specific')
+		setSkipSelect('SPECIFIC')
 
 		const temp = skipSpecific.split(',').map(Number)
 		if (temp[0] === 0) {
@@ -158,7 +144,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 	}
 
 	function handleSweep(isSweeping: boolean) {
-		setSweep(isSweeping)
+		setIsSweeping(isSweeping)
 	}
 
 	function handleButtonClick() {
@@ -182,11 +168,13 @@ const Plugin = ({ selection, ui }: UIProps) => {
 	function handleSelectionChange({ msg, selection }: SelectionMessage) {
 		setSelectionState(msg)
 
-		// 'VALID_UPDATEABLE' or 'VALID_NONUPDATEABLE'
-		if (selection && msg[0] === 'V') {
+		if (
+			selection &&
+			(msg === 'VALID_UPDATEABLE' || msg === 'VALID_NONUPDATEABLE')
+		) {
 			const { width, height, rotation } = selection
 
-			setSelectionDimensions({ width, height, rotation })
+			setSelectionLayout({ width, height, rotation })
 		}
 	}
 
@@ -225,16 +213,16 @@ const Plugin = ({ selection, ui }: UIProps) => {
 			<Preview
 				uiWidth={ui.width}
 				selectionState={selectionState}
-				selectionHeight={selectionDimensions.height}
-				selectionWidth={selectionDimensions.width}
-				selectionRotation={selectionDimensions.rotation}
+				selectionHeight={selectionLayout.height}
+				selectionWidth={selectionLayout.width}
+				selectionRotation={selectionLayout.rotation}
 				numItems={numItems}
 				itemRadius={radius}
 				skipSelect={skipSelect}
 				skipSpecific={skipSpecific}
 				skipEvery={skipEvery}
 				rotateItems={rotateItems}
-				isSweeping={sweep}
+				isSweeping={isSweeping}
 				sweepAngle={sweepAngle}
 				showRadiusBadge={showRadiusBadge}
 				showNumBadge={showNumBadge}
@@ -277,7 +265,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 						onChange={handleSkipSelectMenu}
 						options={skipSelectOptions}
 					/>
-					{skipSelect === 'specific' && (
+					{skipSelect === 'SPECIFIC' && (
 						<div class={style.textboxWrapper}>
 							<Textbox
 								value={skipSpecific}
@@ -299,7 +287,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 							)}
 						</div>
 					)}
-					{skipSelect === 'every' && (
+					{skipSelect === 'EVERY' && (
 						<div class={style.textboxWrapper}>
 							<Textbox
 								value={skipEvery}
@@ -320,7 +308,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 				</Columns>
 				<VerticalSpace space="medium" />
 				<Checkbox onChange={handleRotateItems} value={rotateItems}>
-					<Text>Align elements radially</Text>
+					<Text>Align instances radially</Text>
 				</Checkbox>
 				<VerticalSpace space="medium" />
 				<Button
@@ -337,7 +325,7 @@ const Plugin = ({ selection, ui }: UIProps) => {
 								? 'var(--color-local-accent)'
 								: 'var(--color-local-disabled)'
 					}}>
-					{(buttonStates as any)[selectionState]}
+					{buttonMap[selectionState]}
 				</Button>
 			</Container>
 		</div>

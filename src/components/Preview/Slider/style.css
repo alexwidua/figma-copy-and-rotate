@@ -1,0 +1,103 @@
+.wrapper {
+	--local-basePadding: 8px;
+	--local-strokeWidth: 2px;
+
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	padding: var(--local-basePadding);
+}
+
+/* Slider container */
+.slider {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	padding: var(--local-basePadding);
+}
+
+/* Radial progress bar */
+.arc {
+	width: 100%;
+	height: 100%;
+	border-radius: 100%;
+}
+.arc::after {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: calc(
+		100% - calc(var(--local-basePadding) * 2 + var(--local-strokeWidth))
+	);
+	height: calc(
+		100% - calc(var(--local-basePadding) * 2 + var(--local-strokeWidth))
+	);
+	background: var(--color-container-bg);
+	border-radius: 100%;
+	transform: translateX(-50%) translateY(-50%);
+	content: '';
+}
+
+/* Handle spans from center to the circle's edge, but we attach a dot at the
+end which acts as visible faux handle */
+.handle {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	z-index: 9999;
+	width: 24px;
+	height: 50%;
+	transform-origin: left bottom;
+	cursor: pointer;
+	pointer-events: none;
+}
+
+.handle::after {
+	position: absolute;
+	top: 0px;
+	left: 50%;
+	display: block;
+	width: 8px;
+	height: 8px;
+	background: var(--color-local-white);
+	border: 1px solid var(--color-local-accent);
+	border-radius: 100%;
+	transform: translateX(-50%);
+	content: '';
+	pointer-events: all;
+}
+
+.handle:hover .badge {
+	opacity: 1;
+}
+
+/* Connects the handle to the last item of the circle */
+.helper {
+	position: absolute;
+	top: 0;
+	left: calc(50% - 1px);
+	width: 2px;
+	height: 50%;
+	border-left: 1px dashed var(--color-container-assistive);
+	transform-origin: left bottom;
+	cursor: pointer;
+	pointer-events: none;
+}
+
+/* Badge that indicates the sweep percentage while sweeping */
+.badge {
+	position: absolute;
+	padding: 2px 4px;
+	color: var(--color-local-white);
+	white-space: nowrap;
+	background: var(--color-local-accent);
+	border-radius: 3px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.badgeActive {
+	opacity: 1;
+}

@@ -3,19 +3,16 @@
  */
 
 import { on, emit, showUI, once } from '@create-figma-plugin/utilities'
-import { instantiateAndRotate } from './core/transform'
-import {
-	createComponentInPlace,
-	setSharedData,
-	validateSelection
-} from './helper/utils'
+import { instantiateAndRotate } from './utils/transform'
+import { createComponentInPlace, setSharedData } from './utils/node'
+import { validateSelection } from './utils/selection'
 
 export default function () {
 	/**
 	 * Initial data that is sent to UI on plugin startup
 	 */
 	const ui: UISettings = { width: 280, height: 502 }
-	const initialData = {
+	const initialData: { selection: SelectionLayout; ui: UISettings } = {
 		selection: {
 			width: figma.currentPage.selection[0]?.width || 100,
 			height: figma.currentPage.selection[0]?.height || 100,
@@ -23,7 +20,11 @@ export default function () {
 		},
 		ui
 	}
-	const validNodeTypes = [
+
+	/**
+	 * Plugin settings
+	 */
+	const validNodeTypes: Array<NodeType> = [
 		'BOOLEAN_OPERATION',
 		'COMPONENT',
 		'ELLIPSE',
@@ -38,16 +39,10 @@ export default function () {
 		'VECTOR'
 	]
 
-	showUI(ui, initialData)
-
 	/**
 	 * Event handlers
 	 */
 	const handleSelectionChange = () => {
-		// const data: PluginSelectionMsg = querySelection(
-		// 	figma.currentPage.selection,
-		// 	validNodeTypes
-		// )
 		const msg: SelectionMessage = {
 			msg: validateSelection(figma.currentPage.selection, validNodeTypes),
 			selection: {
@@ -56,11 +51,10 @@ export default function () {
 				rotation: figma.currentPage.selection[0]?.rotation
 			}
 		}
-
 		emit('SELECTION_CHANGE', msg)
 	}
 
-	function handleClick(props: RadialTransform) {
+	function handleClick(props: TransformOptions) {
 		if (!figma.currentPage.selection.length) {
 			return figma.notify('Nothing selected!')
 		}
@@ -139,13 +133,13 @@ export default function () {
 		const skipInstancesEvery: number = parseInt(skipEvery)
 
 		if (skipInstancesSpecific.length || skipInstancesEvery > 1) {
-			if (skipSelect === 'specific') {
+			if (skipSelect === 'SPECIFIC') {
 				group.children.forEach((el, i) => {
 					if (skipInstancesSpecific.includes(i + 1)) {
 						el.remove()
 					}
 				})
-			} else if (skipSelect === 'every') {
+			} else if (skipSelect === 'EVERY') {
 				group.children.forEach((el, i) => {
 					if (i === 0) return
 					else if ((i + 1) % skipInstancesEvery == 0) {
@@ -177,6 +171,7 @@ export default function () {
 	 * Event listeners
 	 */
 	on('GENERATE', handleClick)
-
 	figma.on('selectionchange', handleSelectionChange)
+
+	showUI(ui, initialData)
 }

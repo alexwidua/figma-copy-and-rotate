@@ -94,15 +94,15 @@
 	justify-content: center;
 	border-radius: 4px;
 	box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-	transition: transform 0.2s;
+	transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .item:hover {
 	z-index: 100;
+	box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
 	cursor: pointer;
 }
 
-/* Item index */
 .index {
 	display: block;
 	width: 16px;

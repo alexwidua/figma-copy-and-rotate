@@ -1,69 +1,81 @@
+type SelectionType =
+	| 'MULTIPLE'
+	| 'VALID_UPDATEABLE'
+	| 'VALID_NONUPDATEABLE'
+	| 'INVALID'
+	| 'EMPTY'
+
+type SelectionTypeMap = { [type in SelectionType]: string }
+type SkipType = 'SPECIFIC' | 'EVERY'
+
 interface UIProps {
-	selection: {
+	readonly selection: {
 		width: number
 		height: number
 	}
-	ui: {
+	readonly ui: {
 		width: number
 		height: number
 	}
 }
 
+type XY = { x: number; y: number }
+
 interface PreviewProps {
-	uiWidth: number
-	selectionState: string
-	selectionHeight: number
-	selectionWidth: number
-	selectionRotation: number
-	numItems: string
-	itemRadius: string
-	skipSelect: string
-	skipSpecific: string
-	skipEvery: string
-	rotateItems: boolean
-	isSweeping: boolean
-	sweepAngle: number
-	showRadiusBadge: boolean
-	showNumBadge: boolean
-	onInstanceClick: Function
-	children: import('preact').ComponentChildren
+	readonly uiWidth: number
+	readonly selectionState: SelectionType
+	readonly selectionHeight: number
+	readonly selectionWidth: number
+	readonly selectionRotation: number
+	readonly numItems: string
+	readonly itemRadius: string
+	readonly skipSelect: SkipType
+	readonly skipSpecific: string
+	readonly skipEvery: string
+	readonly rotateItems: boolean
+	readonly isSweeping: boolean
+	readonly sweepAngle: number
+	readonly showRadiusBadge: boolean
+	readonly showNumBadge: boolean
+	readonly onInstanceClick: Function
+	readonly children: import('preact').ComponentChildren
 }
 
 interface SliderProp {
-	onSweepChange: Function
-	onSweep: Function
-	numItems: string
+	readonly onSweepChange: Function
+	readonly onSweep: Function
+	readonly numItems: string
 }
 
 /**
  * From ui to plugin
  */
 
-interface RadialTransform {
-	numItems: string
-	radius: string
-	skipSelect: string
-	skipSpecific: string
-	skipEvery: string
-	rotateItems: boolean
-	sweepAngle: number
+interface TransformOptions {
+	readonly numItems: string
+	readonly radius: string
+	readonly skipSelect: SkipType
+	readonly skipSpecific: string
+	readonly skipEvery: string
+	readonly rotateItems: boolean
+	readonly sweepAngle: number
 }
 
-interface SelectionDimensions {
-	width: number
-	height: number
-	rotation: number
+type SelectionLayout = {
+	readonly width: LayoutMixin['width']
+	readonly height: LayoutMixin['height']
+	readonly rotation: LayoutMixin['rotation']
 }
 
 /**
- * Event message that is sent from plugin to UI
+ * Event message that contains a message string and properties of the current selection.
  */
 interface SelectionMessage {
-	msg: string
-	selection: SelectionDimensions
+	readonly msg: SelectionType
+	readonly selection: SelectionLayout
 }
 
 interface UISettings {
-	height: number
-	width: number
+	readonly height: number
+	readonly width: number
 }

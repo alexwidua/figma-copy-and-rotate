@@ -9,7 +9,6 @@ interface ItemProps extends Partial<PreviewProps> {
 	index: number
 	x: number
 	y: number
-	// itemSize: number
 	itemHeight: number
 	itemWidth: number
 	angle: number
@@ -20,7 +19,6 @@ const Item = ({
 	index,
 	x,
 	y,
-	// itemSize,
 	itemHeight,
 	itemWidth,
 	angle,
@@ -34,19 +32,18 @@ const Item = ({
 	showNumBadge,
 	elevateClick
 }: ItemProps) => {
-	const selection: string = selectionState || 'EMPTY'
-
-	// check for both 'VALID_UPDATEABLE' and 'VALID_UNUPDATEABLE'
-	const isValidSelection: boolean = selection[0] === 'V'
-	const rotation: number = selectionRotation || 0
+	const isValidSelection: boolean =
+		selectionState === 'VALID_UPDATEABLE' ||
+		selectionState === 'VALID_NONUPDATEABLE'
+	const rotation: LayoutMixin['rotation'] = selectionRotation || 0
 
 	const specific: Array<number> = skipSpecific?.split(',').map(Number) || [-1]
 	const every: number = parseInt(skipEvery)
-	const isSkipped =
-		(skipSelect === 'every' && every && !((index + 1) % every)) ||
-		(skipSelect === 'specific' && specific.includes(index + 1))
+	const isSkipped: boolean =
+		(skipSelect === 'EVERY' && every && !((index + 1) % every)) ||
+		(skipSelect === 'SPECIFIC' && specific.includes(index + 1))
 
-	const inlineItem = {
+	const inlineItem: h.JSX.CSSProperties = {
 		width: itemWidth,
 		height: itemHeight,
 		top: y,
@@ -64,11 +61,14 @@ const Item = ({
 		background: isSkipped ? 'none' : 'var(--color-item-fill)'
 	}
 
-	const inlineIndex = {
+	const inlineIndex: h.JSX.CSSProperties = {
 		opacity: showNumBadge ? 1 : 0,
 		background: isSkipped
 			? 'var(--color-item-inactive)'
-			: 'var(--color-local-accent)'
+			: 'var(--color-local-accent)',
+		transform: `rotate(${
+			rotateItems ? angle * -1 + rotation + 90 : -90
+		}deg)`
 	}
 
 	return (
@@ -76,15 +76,8 @@ const Item = ({
 			onClick={() => elevateClick()}
 			class={style.item}
 			style={inlineItem}>
-			<span
-				style={{
-					transform: `rotate(${
-						rotateItems ? angle * -1 + rotation + 90 : 0
-					}deg)`
-				}}>
-				<span class={style.index} style={inlineIndex}>
-					{index + 1}
-				</span>
+			<span class={style.index} style={inlineIndex}>
+				{index + 1}
 			</span>
 		</div>
 	)

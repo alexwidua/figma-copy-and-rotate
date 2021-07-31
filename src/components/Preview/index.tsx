@@ -4,7 +4,6 @@
 
 import { h } from 'preact'
 import style from './style.css'
-
 import { baseDeg } from '../../core/transform'
 import Item from './item'
 
@@ -31,8 +30,8 @@ const Preview = ({
 	const padding: number = 80
 
 	const length: number = parseInt(numItems)
-	const width: number = selectionWidth
-	const height: number = selectionHeight
+	const width: LayoutMixin['width'] = selectionWidth
+	const height: LayoutMixin['height'] = selectionHeight
 	const isWiderOrSquare: boolean = width >= height
 	const radius: number = parseInt(itemRadius)
 	const diameter: number = radius * 2
@@ -42,9 +41,9 @@ const Preview = ({
 		? (width * 2 + diameter) / (uiWidth - padding)
 		: (height * 2 + diameter) / (uiWidth - padding)
 
-	const proportionalHeight = height / factor
-	const proportionalWidth = width / factor
-	const proportionalRadius = radius / factor
+	const proportionalHeight: number = height / factor
+	const proportionalWidth: number = width / factor
+	const proportionalRadius: number = radius / factor
 
 	/**
 	 * Map items radially
@@ -104,13 +103,18 @@ const Preview = ({
 		)
 	})
 
-	const inlineContainer = {
+	const inlineWrapper: h.JSX.CSSProperties = {
+		width: uiWidth,
+		height: uiWidth
+	}
+
+	const inlineContainer: h.JSX.CSSProperties = {
 		height: proportionalRadius * 2 + proportionalHeight,
 		width: proportionalRadius * 2 + proportionalWidth,
 		pointerEvents: isSweeping ? 'none' : 'all'
 	}
 
-	const inlineCircumference = {
+	const inlineCircumference: h.JSX.CSSProperties = {
 		height: isWiderOrSquare
 			? proportionalRadius * 2 + proportionalWidth
 			: proportionalRadius * 2 + proportionalHeight,
@@ -119,17 +123,17 @@ const Preview = ({
 			: proportionalRadius * 2 + proportionalHeight
 	}
 
-	const inlineRadius = {
+	const inlineRadius: h.JSX.CSSProperties = {
 		opacity: showRadiusBadge ? 1 : 0
 	}
 
-	const inlineDistance = {
+	const inlineDistance: h.JSX.CSSProperties = {
 		height: `${parseInt(itemRadius) / factor}px`,
 		top: `${(parseInt(itemRadius) / factor) * -1}px`
 	}
 
 	return (
-		<div class={style.wrapper} style={{ width: uiWidth, height: uiWidth }}>
+		<div class={style.wrapper} style={inlineWrapper}>
 			{children}
 			<div class={style.container} style={inlineContainer}>
 				<div class={style.circumference} style={inlineCircumference} />
