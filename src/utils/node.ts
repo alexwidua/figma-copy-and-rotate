@@ -1,17 +1,12 @@
 /**
- * @file Different utility functions that have been moved here for clarity.
- */
-
-/**
  * Create a component and put it in place of original node.
- * @param selection {SceneNode} Current page selection
+ * @param selection - Current page selection
  * @returns {ComponentNode}
  */
 export function createComponentInPlace(selection: SceneNode): ComponentNode {
 	let node: ComponentNode = figma.createComponent()
-
-	const w: number = selection.width
-	const h: number = selection.height
+	const w: LayoutMixin['width'] = selection.width
+	const h: LayoutMixin['height'] = selection.height
 
 	// Deal with line and vector nodes with width/height of 0
 	const isHairline: boolean = h === 0 || w === 0
@@ -28,9 +23,9 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 	node.appendChild(selection)
 
 	// Save properties, reset cloned node, revert back
-	const tempX: number = selection.x
-	const tempY: number = selection.y
-	const tempDeg: number = selection.rotation
+	const tempX: LayoutMixin['x'] = selection.x
+	const tempY: LayoutMixin['y'] = selection.y
+	const tempDeg: LayoutMixin['rotation'] = selection.rotation
 	selection.x = 0
 	selection.y = 0
 	selection.rotation = 0
@@ -55,16 +50,17 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 }
 
 /**
- *
- * @param node
- * @param parentGroup
- * @param props
+ * Sets shared data which is used to update nodes later on
+ * @param node - Node to be updated
+ * @param parentGroup - Serializes the node's parent group, used later to check if component is instance child
+ * @param options
  */
 export function setSharedData(
 	node: SceneNode,
 	parentGroup: string,
-	props: RadialTransform
+	options: TransformOptions
 ) {
+	// Namespace under which shared setting will be saved
 	const namespace: string = 'radial_items'
 	const {
 		numItems,
@@ -73,7 +69,7 @@ export function setSharedData(
 		skipSpecific,
 		skipEvery,
 		rotateItems
-	} = props
+	} = options
 
 	node.setSharedPluginData(namespace, 'parentGroup', parentGroup)
 	node.setSharedPluginData(namespace, 'numItems', numItems)
@@ -82,42 +78,4 @@ export function setSharedData(
 	node.setSharedPluginData(namespace, 'skipEvery', skipEvery)
 	node.setSharedPluginData(namespace, 'skipSpecific', skipSpecific)
 	node.setSharedPluginData(namespace, 'rotateItems', rotateItems ? '1' : '0')
-}
-
-/**
- * Validates current selected node.
- * @param selection {ReadonlyArray<SceneNode>} - Current page selection
- * @param validNodes {Array<String>} - Array containing all valid node types
- * @returns {String}
- */
-export function validateSelection(
-	selection: ReadonlyArray<SceneNode>,
-	validNodes: Array<String>
-): string {
-	if (selection.length) {
-		if (selection.length > 1) {
-			return 'MULTIPLE'
-		}
-
-		const node: SceneNode = selection[0]
-
-		if (validNodes.indexOf(node.type) >= 0) {
-			const hasParentID = node.getSharedPluginData(
-				'radial_items',
-				'parentGroup'
-			)
-			if (
-				node.parent?.id === hasParentID ||
-				node.parent?.parent?.id === hasParentID
-			) {
-				return 'VALID_UPDATEABLE'
-			} else {
-				return 'VALID_NONUPDATEABLE'
-			}
-		} else {
-			return 'INVALID'
-		}
-	} else {
-		return 'EMPTY'
-	}
 }
