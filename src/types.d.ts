@@ -27,6 +27,7 @@ interface PreviewProps {
 	readonly selectionHeight: number
 	readonly selectionWidth: number
 	readonly selectionRotation: number
+	readonly selectionType: NodeType
 	readonly numItems: string
 	readonly itemRadius: string
 	readonly skipSelect: SkipType
@@ -65,6 +66,7 @@ type SelectionLayout = {
 	readonly width: LayoutMixin['width']
 	readonly height: LayoutMixin['height']
 	readonly rotation: LayoutMixin['rotation']
+	readonly type: NodeType
 }
 
 /**

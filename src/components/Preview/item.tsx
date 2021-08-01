@@ -24,6 +24,7 @@ const Item = ({
 	angle,
 	selectionState,
 	selectionRotation,
+	selectionType,
 	skipSelect,
 	skipSpecific,
 	skipEvery = '0',
@@ -43,6 +44,10 @@ const Item = ({
 		(skipSelect === 'EVERY' && every && !((index + 1) % every)) ||
 		(skipSelect === 'SPECIFIC' && specific.includes(index + 1))
 
+	/**
+	 * Styles
+	 */
+
 	const inlineItem: h.JSX.CSSProperties = {
 		width: itemWidth,
 		height: itemHeight,
@@ -56,9 +61,11 @@ const Item = ({
 				: 'var(--item-border-active)'
 			: 'var(--item-border-inactive)',
 		transform: `rotate(${
-			rotateItems ? angle + (rotation + 90) * -1 : rotation + 90
+			rotateItems ? angle + (rotation + 90) * -1 : rotation + -90
 		}deg)`,
-		background: isSkipped ? 'none' : 'var(--color-item-fill)'
+		background: isSkipped ? 'none' : 'var(--color-item-fill)',
+		borderRadius:
+			selectionType === 'ELLIPSE' ? '100%' : 'var(--border-radius-2)'
 	}
 
 	const inlineIndex: h.JSX.CSSProperties = {
@@ -66,9 +73,7 @@ const Item = ({
 		background: isSkipped
 			? 'var(--color-item-inactive)'
 			: 'var(--color-local-accent)',
-		transform: `rotate(${
-			rotateItems ? angle * -1 + rotation + 90 : -90
-		}deg)`
+		transform: `rotate(${rotateItems ? angle * -1 + rotation + 90 : 90}deg)`
 	}
 
 	return (

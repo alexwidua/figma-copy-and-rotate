@@ -13,6 +13,7 @@ const Preview = ({
 	selectionWidth,
 	selectionHeight,
 	selectionRotation,
+	selectionType,
 	numItems,
 	itemRadius,
 	skipSelect,
@@ -92,6 +93,7 @@ const Preview = ({
 				angle={deg}
 				selectionState={selectionState}
 				selectionRotation={selectionRotation}
+				selectionType={selectionType}
 				skipSelect={skipSelect}
 				skipSpecific={skipSpecific}
 				skipEvery={skipEvery}

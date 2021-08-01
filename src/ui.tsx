@@ -22,7 +22,7 @@ import {
 import './vars.css'
 import style from './style.css'
 import Preview from './components/Preview'
-import Slider from './components/Preview/Slider'
+import Slider from './components/Slider'
 
 const Plugin = ({ selection, ui }: any) => {
 	/**
@@ -44,19 +44,21 @@ const Plugin = ({ selection, ui }: any) => {
 	 * Vars
 	 */
 
-	const initLayout: SelectionLayout = {
+	const initSelection: SelectionLayout = {
 		height: selection.height,
 		width: selection.width,
-		rotation: 0
+		rotation: selection.rotation,
+		type: selection.type
 	}
 	const adaptiveRadius: number = (selection.width + selection.height) / 4
+	const radiusToString: string = adaptiveRadius.toFixed(0)
 
 	/**
 	 * 💾 States
 	 */
 	// UI exposed states
 	const [numItems, setNumItems] = useState<string>('8')
-	const [radius, setRadius] = useState<string>(adaptiveRadius.toFixed(0))
+	const [radius, setRadius] = useState<string>(radiusToString)
 	const [skipSelect, setSkipSelect] = useState<SkipType>('SPECIFIC')
 	const [skipSpecific, setSkipSpecific] = useState<string>('')
 	const [skipEvery, setSkipEvery] = useState<string>('')
@@ -65,7 +67,7 @@ const Plugin = ({ selection, ui }: any) => {
 
 	// Internal states
 	const [selectionLayout, setSelectionLayout] =
-		useState<SelectionLayout>(initLayout)
+		useState<SelectionLayout>(initSelection)
 	const [selectionState, setSelectionState] = useState<SelectionType>('EMPTY')
 	const [showRadiusBadge, setShowRadiusBadge] = useState<boolean>(false)
 	const [showNumBadge, setShowNumBadge] = useState<boolean>(false)
@@ -87,14 +89,16 @@ const Plugin = ({ selection, ui }: any) => {
 	 *  💪 Event handlers
 	 */
 
-	function handleNumItemsInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+	function handleNumItemsInput(
+		e: h.JSX.TargetedEvent<HTMLInputElement>
+	): void {
 		const value = e.currentTarget.value
 		if (parseFloat(value) > 1 && parseFloat(value) % 1 == 0) {
 			setNumItems(e.currentTarget.value)
 		}
 	}
 
-	function handleRadiusInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+	function handleRadiusInput(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
 		const value = e.currentTarget.value
 		if (parseFloat(value) >= 0) {
 			setRadius(e.currentTarget.value)
@@ -102,52 +106,60 @@ const Plugin = ({ selection, ui }: any) => {
 		setShowRadiusBadge(true)
 	}
 
-	function handleSkipSelectMenu(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+	function handleSkipSelectMenu(
+		e: h.JSX.TargetedEvent<HTMLInputElement>
+	): void {
 		setSkipSelect(e.currentTarget.value as SkipType)
 	}
 
-	function handleSkipSpecificInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+	function handleSkipSpecificInput(
+		e: h.JSX.TargetedEvent<HTMLInputElement>
+	): void {
 		const value = e.currentTarget.value
 		setSkipSpecific(value)
 	}
 
-	function handleSkipEveryInput(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+	function handleSkipEveryInput(
+		e: h.JSX.TargetedEvent<HTMLInputElement>
+	): void {
 		const value = e.currentTarget.value
 		setSkipEvery(value)
 	}
 
-	function handleRotateItems(e: h.JSX.TargetedEvent<HTMLInputElement>) {
+	function handleRotateItems(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
 		const value = e.currentTarget.checked
 		setRotateItems(value)
 	}
 
-	function handleInstanceClick(index: number) {
+	function handleInstanceClick(index: number): void {
 		setSkipSelect('SPECIFIC')
 
-		const temp = skipSpecific.split(',').map(Number)
-		if (temp[0] === 0) {
-			temp.shift()
+		// Get current skipped instances
+		const skipped = skipSpecific.split(',').map(Number)
+		if (skipped[0] === 0) {
+			skipped.shift()
 		}
-		const findIndex = temp.indexOf(index + 1)
-
+		// Check if clicked instance has already been selected
+		const findIndex = skipped.indexOf(index + 1)
 		if (findIndex > -1) {
-			temp.splice(findIndex, 1)
+			skipped.splice(findIndex, 1)
 		} else {
-			temp.push(index + 1)
+			skipped.push(index + 1)
 		}
 
-		setSkipSpecific(temp.toString())
+		const stringifyArr: string = skipped.toString()
+		setSkipSpecific(stringifyArr)
 	}
 
-	function handleSweepChange(sweepAngle: number) {
+	function handleSweepChange(sweepAngle: number): void {
 		setSweepAngle(sweepAngle)
 	}
 
-	function handleSweep(isSweeping: boolean) {
+	function handleSweep(isSweeping: boolean): void {
 		setIsSweeping(isSweeping)
 	}
 
-	function handleButtonClick() {
+	function handleButtonClick(): void {
 		emit('GENERATE', {
 			numItems,
 			radius,
@@ -165,16 +177,15 @@ const Plugin = ({ selection, ui }: any) => {
 	/**
 	 * 👂 Event listeners
 	 */
-	function handleSelectionChange({ msg, selection }: SelectionMessage) {
+	function handleSelectionChange({ msg, selection }: SelectionMessage): void {
 		setSelectionState(msg)
 
 		if (
 			selection &&
 			(msg === 'VALID_UPDATEABLE' || msg === 'VALID_NONUPDATEABLE')
 		) {
-			const { width, height, rotation } = selection
-
-			setSelectionLayout({ width, height, rotation })
+			const { width, height, rotation, type } = selection
+			setSelectionLayout({ width, height, rotation, type })
 		}
 	}
 
@@ -216,6 +227,7 @@ const Plugin = ({ selection, ui }: any) => {
 				selectionHeight={selectionLayout.height}
 				selectionWidth={selectionLayout.width}
 				selectionRotation={selectionLayout.rotation}
+				selectionType={selectionLayout.type}
 				numItems={numItems}
 				itemRadius={radius}
 				skipSelect={skipSelect}
@@ -276,7 +288,7 @@ const Plugin = ({ selection, ui }: any) => {
 								onBlurCapture={() => setShowNumBadge(false)}
 								style={{
 									paddingRight:
-										'calc(var(--local-icon-size) *2)'
+										'calc(var(--local-icon-size) * 2)'
 								}}
 							/>
 							{skipSpecific && (
@@ -317,14 +329,9 @@ const Plugin = ({ selection, ui }: any) => {
 					disabled={
 						selectionState === 'INVALID' ||
 						selectionState === 'EMPTY' ||
-						selectionState === 'MULTIPLE'
-					}
-					style={{
-						background:
-							selectionState[0] === 'V'
-								? 'var(--color-local-accent)'
-								: 'var(--color-local-disabled)'
-					}}>
+						selectionState === 'MULTIPLE' ||
+						skipSpecific.split(',').length === parseInt(numItems)
+					}>
 					{buttonMap[selectionState]}
 				</Button>
 			</Container>

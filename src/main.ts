@@ -16,7 +16,8 @@ export default function () {
 		selection: {
 			width: figma.currentPage.selection[0]?.width || 100,
 			height: figma.currentPage.selection[0]?.height || 100,
-			rotation: figma.currentPage.selection[0]?.rotation || 0
+			rotation: figma.currentPage.selection[0]?.rotation || 0,
+			type: 'RECTANGLE'
 		},
 		ui
 	}
@@ -48,7 +49,8 @@ export default function () {
 			selection: {
 				width: figma.currentPage.selection[0]?.width,
 				height: figma.currentPage.selection[0]?.height,
-				rotation: figma.currentPage.selection[0]?.rotation
+				rotation: figma.currentPage.selection[0]?.rotation,
+				type: figma.currentPage.selection[0]?.type
 			}
 		}
 		emit('SELECTION_CHANGE', msg)
