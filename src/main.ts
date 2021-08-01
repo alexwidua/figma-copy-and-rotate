@@ -5,7 +5,7 @@
 import { on, emit, showUI, once } from '@create-figma-plugin/utilities'
 import { instantiateAndRotate } from './utils/transform'
 import { createComponentInPlace, setSharedData } from './utils/node'
-import { validateSelection } from './utils/selection'
+import { validateSelection, hasComponentChild } from './utils/selection'
 
 export default function () {
 	/**
@@ -78,10 +78,7 @@ export default function () {
 		} = props
 		let node: SceneNode
 
-		if (
-			selection.type === 'GROUP' &&
-			selection.children.some((e) => e.type === 'COMPONENT')
-		) {
+		if (selection.type === 'GROUP' && hasComponentChild(selection)) {
 			emit('TRANSFORM_CALLBACK', false)
 			return figma.notify(`Can't rotate group that contains components.`)
 		}
@@ -169,8 +166,8 @@ export default function () {
 		getFirstChild.remove()
 		group.insertChild(0, node)
 
-		node.name = 'Origin'
-		group.name = 'Radial Pattern'
+		node.name = 'Rotated component'
+		group.name = 'Rotated Instances'
 
 		// Set plugin data so nodes can be read & updated later on
 		setSharedData(node, group.id, props)

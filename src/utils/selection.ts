@@ -33,3 +33,21 @@ export function validateSelection(
 		return 'EMPTY'
 	}
 }
+
+/**
+ * Recursively searchs for component children that would prevent componentizing parent node.
+ * @param selection - Current selecetd node
+ * @returns - truthy value if component child has been found
+ */
+export function hasComponentChild(selection: SceneNode): boolean | undefined {
+	let hasComponent
+	if (selection.type === 'COMPONENT') {
+		return true
+	} else if (selection.type !== 'GROUP') {
+		return false
+	}
+	selection.children.some(
+		(child) => (hasComponent = hasComponentChild(child))
+	)
+	return hasComponent
+}
