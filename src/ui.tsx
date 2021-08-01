@@ -33,11 +33,11 @@ const Plugin = ({ selection, ui }: any) => {
 		{ children: 'Skip every', value: 'EVERY' }
 	]
 	const buttonMap: SelectionTypeMap = {
-		EMPTY: 'No items selected',
-		INVALID: 'Node type not supported',
-		VALID_UPDATEABLE: 'Update items',
-		VALID_NONUPDATEABLE: 'Rotate items',
-		MULTIPLE: 'Group multiple nodes before rotation'
+		EMPTY: 'No element selected',
+		INVALID: 'Selected type not supported',
+		VALID_UPDATEABLE: 'Update selection',
+		VALID_NONUPDATEABLE: 'Rotate selection',
+		MULTIPLE: 'Group multiple selection before rotating'
 	}
 
 	/**
@@ -169,9 +169,6 @@ const Plugin = ({ selection, ui }: any) => {
 			rotateItems,
 			sweepAngle
 		})
-
-		// Additionally set selection state because generated node is always updateable.
-		// setSelectionState('VALID_UPDATEABLE')
 	}
 
 	/**
