@@ -160,7 +160,7 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	function handleButtonClick(): void {
-		emit('GENERATE', {
+		emit('TRANSFORM', {
 			numItems,
 			radius,
 			skipSelect,
@@ -171,7 +171,7 @@ const Plugin = ({ selection, ui }: any) => {
 		})
 
 		// Additionally set selection state because generated node is always updateable.
-		setSelectionState('VALID_UPDATEABLE')
+		// setSelectionState('VALID_UPDATEABLE')
 	}
 
 	/**
@@ -191,6 +191,12 @@ const Plugin = ({ selection, ui }: any) => {
 
 	// Listen to messages from plugin side
 	on('SELECTION_CHANGE', handleSelectionChange)
+	on('TRANSFORM_CALLBACK', (success) => {
+		if (!success) return
+		else {
+			setSelectionState('VALID_UPDATEABLE')
+		}
+	})
 
 	/**
 	 *  Validators

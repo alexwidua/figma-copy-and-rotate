@@ -56,12 +56,14 @@ export default function () {
 		emit('SELECTION_CHANGE', msg)
 	}
 
-	function handleClick(props: TransformOptions) {
+	function transformNodes(props: TransformOptions) {
 		if (!figma.currentPage.selection.length) {
-			return figma.notify('Nothing selected!')
+			emit('TRANSFORM_CALLBACK', false)
+			return figma.notify('Selection is empty.')
 		}
 		if (figma.currentPage.selection.length > 1) {
-			return figma.notify('Select only one node')
+			emit('TRANSFORM_CALLBACK', false)
+			return figma.notify(`Multiple elements selected.`)
 		}
 
 		const selection: SceneNode = figma.currentPage.selection[0]
@@ -75,6 +77,14 @@ export default function () {
 			sweepAngle
 		} = props
 		let node: SceneNode
+
+		if (
+			selection.type === 'GROUP' &&
+			selection.children.some((e) => e.type === 'COMPONENT')
+		) {
+			emit('TRANSFORM_CALLBACK', false)
+			return figma.notify(`Can't rotate group that contains components.`)
+		}
 
 		// 1. Componentize selection
 		if (validNodeTypes.indexOf(selection.type) >= 0) {
@@ -167,12 +177,15 @@ export default function () {
 		if (node !== selection) {
 			setSharedData(selection, group.id, props)
 		}
+
+		emit('TRANSFORM_CALLBACK', true)
 	}
 
 	/**
 	 * Event listeners
 	 */
-	on('GENERATE', handleClick)
+
+	on('TRANSFORM', transformNodes)
 	figma.on('selectionchange', handleSelectionChange)
 
 	showUI(ui, initialData)
