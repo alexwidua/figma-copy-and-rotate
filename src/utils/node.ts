@@ -59,7 +59,7 @@ export function setSharedData(
 	node: SceneNode,
 	parentGroup: string,
 	options: TransformOptions
-) {
+): void {
 	// Namespace under which shared setting will be saved
 	const namespace: string = 'radial_items'
 	const {

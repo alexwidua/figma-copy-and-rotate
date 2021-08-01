@@ -10,8 +10,6 @@ export const baseDeg: number = -90
  * @param numItems - Number of copies/ instances
  * @param radius
  * @returns {Array<SceneNode}
- *
- * TODO: Guard node type or assume correct type?
  */
 export function instantiateAndRotate(
 	node: ComponentNode,

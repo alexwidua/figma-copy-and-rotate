@@ -17,6 +17,10 @@
 	--item-border-active: 1px solid var(--color-local-accent);
 	--item-border-inactive: 1px solid var(--color-local-white);
 	--item-border-deselected: 1px dashed var(--color-container-assistive);
+
+	/* --border-radius-2: 2px; */
+	--border-radius-3: 3px;
+	/* --border-radius-6: 6px; */
 }
 
 body {
