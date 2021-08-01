@@ -48,7 +48,7 @@ const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
 	/**
 	 * Styles
 	 */
-	const inlineArc: h.JSX.CSSProperties = {
+	const inlineBar: h.JSX.CSSProperties = {
 		background: `
 		conic-gradient(
 			${isMouseDown ? 'var(--color-local-accent)' : 'var(--color-container-bg)'} 0deg,
@@ -63,18 +63,27 @@ const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
 			`
 	}
 
+	// Make sure that badge stays centered during rotation
+	const badgeHeight: number = 20
+	const paddingLR: number = 4
+	const inset: number = 20
 	const inlineBadge: h.JSX.CSSProperties = {
 		transform: `
 		rotate(${-sweepAngle}deg) 
-		translateX(calc(${50 * cos}% + ${14 * sin}px))
-		translateY(calc(${16 * sin}% + ${36 * sin}px))
+		translateX(calc(${50 * cos}% + ${inset * sin}px))
+		translateY(calc(${inset * sin}% + ${
+			(paddingLR + badgeHeight + badgeHeight / 2) * sin
+		}px))
 		`,
 		left: '50%',
-		top: '16%'
+		top: `${inset}%`,
+		height: `${badgeHeight}px`,
+		lineHeight: `${badgeHeight}px`,
+		padding: `0px ${paddingLR}px`
 	}
 
 	const inlineHelper: h.JSX.CSSProperties = {
-		transform: `rotate(${sweepAngle}deg) translateX(calc(-50% + 1px))`
+		transform: `rotate(${sweepAngle}deg) translateX(-50%)`
 	}
 
 	const inlineHandle: h.JSX.CSSProperties = {
@@ -160,7 +169,7 @@ const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
 			onMouseUp={handleMouseUp}
 			onMouseMove={handleMouseMove}>
 			<div class={style.slider} ref={slider}>
-				<div class={style.arc} style={inlineArc} />
+				<div class={style.bar} style={inlineBar} />
 				<div class={style.helper} style={inlineHelper} />
 				<div
 					class={style.handle}
