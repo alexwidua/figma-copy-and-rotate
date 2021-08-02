@@ -41,6 +41,7 @@ export default function () {
 	]
 
 	// Internal plugin state
+	let TRANSFORMATION = false
 	let state: TransformOptions = {
 		numItems: 8,
 		radius: 50,
@@ -50,9 +51,6 @@ export default function () {
 		rotateItems: true,
 		sweepAngle: 360
 	}
-	let TRANSFORMATION = false
-
-	// Refs
 	let selectionRef: SceneNode | undefined
 	let groupRef: GroupNode | undefined
 	let componentRef: ComponentNode | undefined
@@ -76,10 +74,10 @@ export default function () {
 		const data = {
 			selectionType: str,
 			selection: {
-				width: figma.currentPage.selection[0]?.width,
-				height: figma.currentPage.selection[0]?.height,
-				rotation: figma.currentPage.selection[0]?.rotation,
-				type: figma.currentPage.selection[0]?.type
+				width: selectionRef?.width,
+				height: selectionRef?.height,
+				rotation: selectionRef?.rotation,
+				type: selectionRef?.type
 			}
 		}
 		emit('EMIT_SELECTION_CHANGE_TO_UI', data)
