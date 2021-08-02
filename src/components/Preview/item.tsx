@@ -33,9 +33,7 @@ const Item = ({
 	showNumBadge,
 	elevateClick
 }: ItemProps) => {
-	const isValidSelection: boolean =
-		selectionState === 'VALID_UPDATEABLE' ||
-		selectionState === 'VALID_NONUPDATEABLE'
+	const isValidSelection: boolean = selectionState === 'VALID'
 	const rotation: LayoutMixin['rotation'] = selectionRotation || 0
 
 	const specific: Array<number> = skipSpecific?.split(',').map(Number) || [-1]

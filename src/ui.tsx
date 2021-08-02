@@ -35,15 +35,11 @@ const Plugin = ({ selection, ui }: any) => {
 	const buttonMap: SelectionTypeMap = {
 		EMPTY: 'No element selected',
 		INVALID: 'Selected type not supported',
-		VALID_UPDATEABLE: 'Update selection',
-		VALID_NONUPDATEABLE: 'Rotate selection',
+		IS_INSTANCE: 'TODO',
+		HAS_COMPONENT: 'TODO',
+		VALID: 'Valid',
 		MULTIPLE: 'Group multiple selection before rotating'
 	}
-
-	/**
-	 * Vars
-	 */
-
 	const initSelection: SelectionLayout = {
 		height: selection.height,
 		width: selection.width,
@@ -56,6 +52,7 @@ const Plugin = ({ selection, ui }: any) => {
 	/**
 	 * 💾 States
 	 */
+
 	// UI exposed states
 	const [numItems, setNumItems] = useState<string>('8')
 	const [radius, setRadius] = useState<string>(radiusToString)
@@ -76,9 +73,10 @@ const Plugin = ({ selection, ui }: any) => {
 	/**
 	 * 📎 Hooks
 	 */
+
+	// Set adaptive radius on startup
 	useEffect(() => {
 		if (selection) {
-			// Set adaptive radius on startup
 			const { width, height } = selection
 			const average = (width + height) / 2
 			setRadius((average / 2).toFixed(1))
@@ -88,13 +86,16 @@ const Plugin = ({ selection, ui }: any) => {
 	/**
 	 *  💪 Event handlers
 	 */
-
 	function handleNumItemsInput(
 		e: h.JSX.TargetedEvent<HTMLInputElement>
 	): void {
 		const value = e.currentTarget.value
-		if (parseFloat(value) > 1 && parseFloat(value) % 1 == 0) {
+		if (parseInt(value) > 1 && parseFloat(value) % 1 == 0) {
 			setNumItems(e.currentTarget.value)
+			const data: Partial<TransformOptions> = {
+				numItems: parseInt(e.currentTarget.value)
+			}
+			emit('EMIT_INPUT_TO_PLUGIN', data)
 		}
 	}
 
@@ -102,6 +103,10 @@ const Plugin = ({ selection, ui }: any) => {
 		const value = e.currentTarget.value
 		if (parseFloat(value) >= 0) {
 			setRadius(e.currentTarget.value)
+			const data: Partial<TransformOptions> = {
+				radius: parseInt(e.currentTarget.value)
+			}
+			emit('EMIT_INPUT_TO_PLUGIN', data)
 		}
 		setShowRadiusBadge(true)
 	}
@@ -110,6 +115,10 @@ const Plugin = ({ selection, ui }: any) => {
 		e: h.JSX.TargetedEvent<HTMLInputElement>
 	): void {
 		setSkipSelect(e.currentTarget.value as SkipType)
+		const data: Partial<TransformOptions> = {
+			skipSelect: e.currentTarget.value as SkipType
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleSkipSpecificInput(
@@ -117,6 +126,10 @@ const Plugin = ({ selection, ui }: any) => {
 	): void {
 		const value = e.currentTarget.value
 		setSkipSpecific(value)
+		const data: Partial<TransformOptions> = {
+			skipSpecific: e.currentTarget.value.split(',').map(Number)
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleSkipEveryInput(
@@ -124,35 +137,64 @@ const Plugin = ({ selection, ui }: any) => {
 	): void {
 		const value = e.currentTarget.value
 		setSkipEvery(value)
+		const data: Partial<TransformOptions> = {
+			skipEvery: parseInt(e.currentTarget.value)
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
+	}
+
+	function handleResetSkip() {
+		setSkipEvery('')
+		setSkipSpecific('')
+		const data: Partial<TransformOptions> = {
+			skipEvery: 0,
+			skipSpecific: []
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleRotateItems(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
 		const value = e.currentTarget.checked
 		setRotateItems(value)
+		const data: Partial<TransformOptions> = {
+			rotateItems: e.currentTarget.checked
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleInstanceClick(index: number): void {
-		setSkipSelect('SPECIFIC')
+		const mappedToNumberArr = skipSpecific.split(',').map(Number)
 
-		// Get current skipped instances
-		const skipped = skipSpecific.split(',').map(Number)
-		if (skipped[0] === 0) {
-			skipped.shift()
+		if (mappedToNumberArr[0] === 0) {
+			mappedToNumberArr.shift()
 		}
-		// Check if clicked instance has already been selected
-		const findIndex = skipped.indexOf(index + 1)
-		if (findIndex > -1) {
-			skipped.splice(findIndex, 1)
+
+		const isAlreadySelected = mappedToNumberArr.indexOf(index + 1)
+
+		if (isAlreadySelected > -1) {
+			mappedToNumberArr.splice(isAlreadySelected, 1)
 		} else {
-			skipped.push(index + 1)
+			mappedToNumberArr.push(index + 1)
 		}
 
-		const stringifyArr: string = skipped.toString()
+		const stringifyArr: string = mappedToNumberArr.toString()
+		setSkipSelect('SPECIFIC')
 		setSkipSpecific(stringifyArr)
+
+		const data: Partial<TransformOptions> = {
+			skipSelect: 'SPECIFIC',
+			skipSpecific: mappedToNumberArr
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleSweepChange(sweepAngle: number): void {
 		setSweepAngle(sweepAngle)
+
+		const data: Partial<TransformOptions> = {
+			sweepAngle
+		}
+		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleSweep(isSweeping: boolean): void {
@@ -160,40 +202,21 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	function handleButtonClick(): void {
-		emit('TRANSFORM', {
-			numItems,
-			radius,
-			skipSelect,
-			skipSpecific,
-			skipEvery,
-			rotateItems,
-			sweepAngle
-		})
+		emit('APPLY_TRANSFORMATION')
 	}
 
 	/**
 	 * 👂 Event listeners
 	 */
-	function handleSelectionChange({ msg, selection }: SelectionMessage): void {
-		setSelectionState(msg)
+	function handleSelectionChange({ selectionType, selection }: any): void {
+		setSelectionState(selectionType)
 
-		if (
-			selection &&
-			(msg === 'VALID_UPDATEABLE' || msg === 'VALID_NONUPDATEABLE')
-		) {
+		if (selectionType === 'VALID') {
 			const { width, height, rotation, type } = selection
 			setSelectionLayout({ width, height, rotation, type })
 		}
 	}
-
-	// Listen to messages from plugin side
-	on('SELECTION_CHANGE', handleSelectionChange)
-	on('TRANSFORM_CALLBACK', (success) => {
-		if (!success) return
-		else {
-			setSelectionState('VALID_UPDATEABLE')
-		}
-	})
+	on('EMIT_SELECTION_CHANGE_TO_UI', handleSelectionChange)
 
 	/**
 	 *  Validators
@@ -206,11 +229,9 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	function validateSkipSpecific(value: string): string | boolean {
-		const split = value.split(',')
-
-		// Check if not empty, is number > 0 (since 0 is OG node) and whole number
-		const temp = split.filter(
-			(e) => e && parseFloat(e) > 0 && parseFloat(e) % 1 == 0
+		const split = value.split(',').map(Number)
+		const temp: any = split.filter(
+			(e, i) => e > 0 && e % 1 == 0 && split.indexOf(e) == i
 		)
 		return temp.toString()
 	}
@@ -296,7 +317,7 @@ const Plugin = ({ selection, ui }: any) => {
 							/>
 							{skipSpecific && (
 								<span
-									onClick={() => setSkipSpecific('')}
+									onClick={handleResetSkip}
 									class={style.textboxClear}
 								/>
 							)}
@@ -314,7 +335,7 @@ const Plugin = ({ selection, ui }: any) => {
 							/>
 							{skipEvery && (
 								<span
-									onClick={() => setSkipEvery('')}
+									onClick={handleResetSkip}
 									class={style.textboxClear}
 								/>
 							)}

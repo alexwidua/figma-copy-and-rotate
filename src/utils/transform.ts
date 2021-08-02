@@ -26,8 +26,6 @@ export function instantiateAndRotate(
 	})
 
 	collection.forEach((e, i) => {
-		// 1. Store properties before transformation so we can restore the original position.
-		// Initial degree is negated because Figma rotates objects CCW but nodes are generated CW
 		const initX: LayoutMixin['x'] = node.x
 		const initY: LayoutMixin['y'] = node.y
 		const initDeg: LayoutMixin['rotation'] = Math.round(node.rotation) * -1
@@ -42,8 +40,7 @@ export function instantiateAndRotate(
 		const deg: number = baseDeg + (sweepAngle / (numItems - 1)) * i
 		const rad: number = deg * (Math.PI / 180)
 
-		// If the cloned node isn't square, it will skew the circle and radius.
-		// We account for that by normalizing both radius and arc.
+		// Normalize shape and radius if node is oblong
 		const diff: number = Math.abs(w - h)
 		const normalizeShape: number =
 			w >= h
@@ -56,7 +53,7 @@ export function instantiateAndRotate(
 				? -diff * Math.sin(Math.abs(initRad))
 				: diff * Math.sin(Math.abs(initRad))
 
-		// 2. Rotate the cloned nodes using affine transformation
+		// Rotate instances in circle
 		const translate: XY = {
 			x:
 				(r + w - normalizeRadius) * Math.cos(rad) +
@@ -77,23 +74,16 @@ export function instantiateAndRotate(
 		e.relativeTransform = radialTransform
 		e.rotation = e.rotation + baseDeg
 
-		// Make the original cloned node the origin of the circle.
+		// Shift circle down so that original node becomes position 0 (12:00)
 		const x: LayoutMixin['x'] = e.x + initX
 		const y: LayoutMixin['y'] = e.y + initY
-
-		// 3. Shift the circle so the original node becomes the origin.
-		// Caveat: if the original node is rotated, it messes with the x,y positioning of the cloned nodes
-		// because a rotation also sets the x and y property. The origin node will be off-center.
-		// We take that into account by shifting the circle depending on the cloned node's rotation.
-
 		const sin: number = Math.sin(initRad)
 		const cos: number = Math.cos(initRad)
-
 		e.x = x + w * (1 - sin) - w * (1 - cos)
 		e.y = y + h * (1 - sin) - h * (1 - cos) + h * sin
 
-		// 4. Restore the original node's rotation
-		// TODO: Refactor & merge into one transform
+		// Restore the original nodes rotation by applying it to all instances
+		// We need some extra math here to preserve the radius
 		const newX: LayoutMixin['x'] = e.x
 		const newY: LayoutMixin['y'] = e.y
 
@@ -102,7 +92,6 @@ export function instantiateAndRotate(
 			? rad + initRad + baseDegRad
 			: initRad
 
-		// Rotate nodes around their center(since 0,0 of a node is top-left)
 		const rotateAroundOrigin: XY = {
 			x:
 				w -
@@ -116,12 +105,12 @@ export function instantiateAndRotate(
 				h * Math.cos(rad)
 		}
 
-		const preserveRotation: Transform = [
+		const restoreInitRotation: Transform = [
 			[Math.cos(newRad), -Math.sin(newRad), rotateAroundOrigin.x],
 			[Math.sin(newRad), Math.cos(newRad), rotateAroundOrigin.y]
 		]
 
-		e.relativeTransform = preserveRotation
+		e.relativeTransform = restoreInitRotation
 		e.x = e.x + newX
 		e.y = e.y + newY
 		e.name = `Rotated Instance ${i + 1}`

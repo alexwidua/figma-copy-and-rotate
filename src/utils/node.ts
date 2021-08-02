@@ -49,33 +49,33 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 	return node
 }
 
-/**
- * Sets shared data which is used to update nodes later on
- * @param node - Node to be updated
- * @param parentGroup - Serializes the node's parent group, used later to check if component is instance child
- * @param options
- */
-export function setSharedData(
-	node: SceneNode,
-	parentGroup: string,
-	options: TransformOptions
-): void {
-	// Namespace under which shared setting will be saved
-	const namespace: string = 'radial_items'
-	const {
-		numItems,
-		radius,
-		skipSelect,
-		skipSpecific,
-		skipEvery,
-		rotateItems
-	} = options
+// /**
+//  * Sets shared data which is used to update nodes later on
+//  * @param node - Node to be updated
+//  * @param parentGroup - Serializes the node's parent group, used later to check if component is instance child
+//  * @param options
+//  */
+// export function setSharedData(
+// 	node: SceneNode,
+// 	parentGroup: string,
+// 	options: TransformOptions
+// ): void {
+// 	// Namespace under which shared setting will be saved
+// 	const namespace: string = 'radial_items'
+// 	const {
+// 		numItems,
+// 		radius,
+// 		skipSelect,
+// 		skipSpecific,
+// 		skipEvery,
+// 		rotateItems
+// 	} = options
 
-	node.setSharedPluginData(namespace, 'parentGroup', parentGroup)
-	node.setSharedPluginData(namespace, 'numItems', numItems)
-	node.setSharedPluginData(namespace, 'radius', radius)
-	node.setSharedPluginData(namespace, 'skipSelect', skipSelect)
-	node.setSharedPluginData(namespace, 'skipEvery', skipEvery)
-	node.setSharedPluginData(namespace, 'skipSpecific', skipSpecific)
-	node.setSharedPluginData(namespace, 'rotateItems', rotateItems ? '1' : '0')
-}
+// 	node.setSharedPluginData(namespace, 'parentGroup', parentGroup)
+// 	node.setSharedPluginData(namespace, 'numItems', numItems)
+// 	node.setSharedPluginData(namespace, 'radius', radius)
+// 	node.setSharedPluginData(namespace, 'skipSelect', skipSelect)
+// 	node.setSharedPluginData(namespace, 'skipEvery', skipEvery)
+// 	node.setSharedPluginData(namespace, 'skipSpecific', skipSpecific)
+// 	node.setSharedPluginData(namespace, 'rotateItems', rotateItems ? '1' : '0')
+// }

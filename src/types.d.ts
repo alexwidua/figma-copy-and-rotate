@@ -1,8 +1,9 @@
 type SelectionType =
 	| 'MULTIPLE'
-	| 'VALID_UPDATEABLE'
-	| 'VALID_NONUPDATEABLE'
+	| 'VALID'
 	| 'INVALID'
+	| 'IS_INSTANCE'
+	| 'HAS_COMPONENT'
 	| 'EMPTY'
 
 type SelectionTypeMap = { [type in SelectionType]: string }
@@ -52,14 +53,14 @@ interface SliderProp {
  * From ui to plugin
  */
 
-interface TransformOptions {
-	readonly numItems: string
-	readonly radius: string
-	readonly skipSelect: SkipType
-	readonly skipSpecific: string
-	readonly skipEvery: string
-	readonly rotateItems: boolean
-	readonly sweepAngle: number
+type TransformOptions = {
+	numItems: number
+	radius: number
+	skipSelect: SkipType
+	skipSpecific: Array<number>
+	skipEvery: number
+	rotateItems: boolean
+	sweepAngle: number
 }
 
 type SelectionLayout = {

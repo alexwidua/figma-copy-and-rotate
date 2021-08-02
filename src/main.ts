@@ -4,7 +4,7 @@
 
 import { on, emit, showUI, once } from '@create-figma-plugin/utilities'
 import { instantiateAndRotate } from './utils/transform'
-import { createComponentInPlace, setSharedData } from './utils/node'
+import { createComponentInPlace } from './utils/node'
 import { validateSelection, hasComponentChild } from './utils/selection'
 
 export default function () {
@@ -26,26 +26,55 @@ export default function () {
 	 * Plugin settings
 	 */
 	const validNodeTypes: Array<NodeType> = [
-		'BOOLEAN_OPERATION',
-		'COMPONENT',
-		'ELLIPSE',
-		'FRAME',
+		// 'BOOLEAN_OPERATION',
+		// 'COMPONENT',
+		// 'ELLIPSE',
+		// 'FRAME',
 		'GROUP',
-		'INSTANCE',
-		'LINE',
-		'POLYGON',
-		'RECTANGLE',
-		'STAR',
-		'TEXT',
-		'VECTOR'
+		// 'INSTANCE',
+		// 'LINE',
+		// 'POLYGON',
+		'RECTANGLE'
+		// 'STAR',
+		// 'TEXT',
+		// 'VECTOR'
 	]
 
-	/**
-	 * Event handlers
-	 */
-	const handleSelectionChange = () => {
-		const msg: SelectionMessage = {
-			msg: validateSelection(figma.currentPage.selection, validNodeTypes),
+	// Internal plugin state
+	let state: TransformOptions = {
+		numItems: 8,
+		radius: 50,
+		skipSelect: 'SPECIFIC',
+		skipSpecific: [0],
+		skipEvery: 0,
+		rotateItems: true,
+		sweepAngle: 360
+	}
+	let TRANSFORMATION = false
+
+	// Refs
+	let selectionRef: SceneNode | undefined
+	let groupRef: GroupNode | undefined
+	let componentRef: ComponentNode | undefined
+
+	// Handle selection change...
+	function handleSelectionChange() {
+		const str: SelectionType = validateSelection(
+			figma.currentPage.selection,
+			validNodeTypes
+		)
+
+		if (str.match(/^(EMPTY|INVALID|IS_INSTANCE|HAS_COMPONENT|MULTIPLE)$/)) {
+			removeRefs()
+		} else if (selectionRef && groupRef && componentRef) {
+			removeRefs()
+			componentizeSelection(figma.currentPage.selection[0])
+		} else {
+			componentizeSelection(figma.currentPage.selection[0])
+		}
+
+		const data = {
+			selectionType: str,
 			selection: {
 				width: figma.currentPage.selection[0]?.width,
 				height: figma.currentPage.selection[0]?.height,
@@ -53,137 +82,133 @@ export default function () {
 				type: figma.currentPage.selection[0]?.type
 			}
 		}
-		emit('SELECTION_CHANGE', msg)
+		emit('EMIT_SELECTION_CHANGE_TO_UI', data)
 	}
 
-	function transformNodes(props: TransformOptions) {
-		if (!figma.currentPage.selection.length) {
-			emit('TRANSFORM_CALLBACK', false)
-			return figma.notify('Selection is empty.')
+	// Handle input changes
+	function handleUpdateFromUI(data: any) {
+		state = { ...state, ...data }
+		if (groupRef && componentRef) {
+			groupRef.remove()
+			groupRef = undefined
+			updatePreview()
 		}
-		if (figma.currentPage.selection.length > 1) {
-			emit('TRANSFORM_CALLBACK', false)
-			return figma.notify(`Multiple elements selected.`)
+	}
+
+	// Componentize selection
+	function componentizeSelection(selection: SceneNode) {
+		if (!selection) {
+			return figma.notify('Please select nodes via the canvas.')
 		}
+		// Store reference to selected node in case plugin is closed/selection dismissed
+		selectionRef = selection.clone()
+		selectionRef.visible = false
 
-		const selection: SceneNode = figma.currentPage.selection[0]
-		const {
-			numItems,
-			radius,
-			skipSelect,
-			skipSpecific,
-			skipEvery,
-			rotateItems,
-			sweepAngle
-		} = props
-		let node: SceneNode
-
-		if (selection.type === 'GROUP' && hasComponentChild(selection)) {
-			emit('TRANSFORM_CALLBACK', false)
-			return figma.notify(`Can't rotate group that contains components.`)
-		}
-
-		// 1. Componentize selection
-		if (validNodeTypes.indexOf(selection.type) >= 0) {
-			if (selection.type === 'COMPONENT') {
-				node = selection
-			}
-			// Catch children of component nodes which are regular SceneNodes
-			else if (
-				selection.parent &&
-				selection.parent.type === 'COMPONENT'
-			) {
-				node = selection.parent
-			} else {
-				node = createComponentInPlace(selection)
-			}
+		if (selection.type === 'COMPONENT') {
+			componentRef = selection
 		} else {
-			return figma.notify('Node type not supported')
+			componentRef = createComponentInPlace(selection)
+		}
+		componentRef.name = 'Preview'
+		updatePreview()
+	}
+
+	// Updates canvas preview
+	function updatePreview() {
+		if (!componentRef) {
+			return
 		}
 
-		// 2. Check if node has been cloned before and remove to avoid duplicate circles
-		const radialParent = selection.getSharedPluginData(
-			'radial_items',
-			'parentGroup'
-		)
-		if (radialParent) {
-			const radialParentNode = figma.getNodeById(radialParent)
-			if (radialParentNode && !radialParentNode.removed) {
-				radialParentNode.parent?.appendChild(node)
-				if (!radialParentNode.removed) {
-					radialParentNode.remove()
-				}
-			}
-		}
-
-		// 3. Create instances and arrange in circle
 		const circle: Array<InstanceNode> = instantiateAndRotate(
-			node,
-			parseInt(numItems),
-			parseInt(radius),
-			rotateItems,
-			sweepAngle
+			componentRef,
+			state.numItems,
+			state.radius,
+			state.rotateItems,
+			state.sweepAngle
 		)
+		const parent = componentRef.parent || figma.currentPage
+		groupRef = figma.group(circle, parent)
 
-		// 4. Group and tidy up
-		const parent = node.parent || figma.currentPage
-		const group: GroupNode = figma.group(circle, parent)
+		// Account for offset caused by grouping
+		const alignX: number = componentRef.x - circle[0].x
+		const alignY: number = componentRef.y - circle[0].y
+		groupRef.x = groupRef.x + alignX
+		groupRef.y = groupRef.y + alignY
 
-		// Account for possible displacement caused by rotation of original node
-		const alignX: number = node.x - circle[0].x
-		const alignY: number = node.y - circle[0].y
-		group.x = group.x + alignX
-		group.y = group.y + alignY
+		groupRef.name = '[Preview] Rotated Instances'
+		groupRef.opacity = 0.3
 
-		// 5. Deal with skipped instances
-		const skipInstancesSpecific: Array<number> = skipSpecific
-			.split(',')
-			.map(Number)
-		const skipInstancesEvery: number = parseInt(skipEvery)
-
-		if (skipInstancesSpecific.length || skipInstancesEvery > 1) {
-			if (skipSelect === 'SPECIFIC') {
-				group.children.forEach((el, i) => {
-					if (skipInstancesSpecific.includes(i + 1)) {
+		if (state.skipSpecific.length || state.skipEvery > 1) {
+			if (state.skipSelect === 'SPECIFIC') {
+				groupRef.children.forEach((el, i) => {
+					if (state.skipSpecific.includes(i + 1)) {
 						el.remove()
 					}
 				})
-			} else if (skipSelect === 'EVERY') {
-				group.children.forEach((el, i) => {
+			} else if (state.skipSelect === 'EVERY') {
+				groupRef.children.forEach((el, i) => {
 					if (i === 0) return
-					else if ((i + 1) % skipInstancesEvery == 0) {
+					else if ((i + 1) % state.skipEvery == 0) {
 						el.remove()
 					}
 				})
 			}
 		}
+	}
 
-		// Replace first child with initial cloned node
-		const getFirstChild: SceneNode = group.children[0]
-		node.rotation = getFirstChild.rotation
-		node.x = getFirstChild.x
-		node.y = getFirstChild.y
-		getFirstChild.remove()
-		group.insertChild(0, node)
-
-		node.name = 'Rotated component'
-		group.name = 'Rotated Instances'
-
-		// Set plugin data so nodes can be read & updated later on
-		setSharedData(node, group.id, props)
-		if (node !== selection) {
-			setSharedData(selection, group.id, props)
+	// Applies the temporary transformation, cleans up and closes plugin.
+	function applyTransformation() {
+		if (!selectionRef || !groupRef || !componentRef) {
+			return console.log(
+				`Couldn't apply transformation. References are missing`
+			)
 		}
+		// Remove first instance and replace with original selected node
+		const getFirstChild: SceneNode = groupRef.children[0]
+		componentRef.rotation = getFirstChild.rotation
+		componentRef.x = getFirstChild.x
+		componentRef.y = getFirstChild.y
+		componentRef.name = selectionRef.name
+		getFirstChild.remove()
+		groupRef.insertChild(0, componentRef)
 
-		emit('TRANSFORM_CALLBACK', true)
+		selectionRef.remove()
+		groupRef.opacity = 1
+		groupRef.name = 'Rotated Instances'
+		TRANSFORMATION = true
+
+		figma.closePlugin()
+	}
+
+	// Remove transformation preview before closing
+	function handleClose() {
+		if (TRANSFORMATION) return
+		else if (selectionRef && groupRef && componentRef) {
+			removeRefs()
+		}
+	}
+
+	// Utility func that removes all stored references.
+	function removeRefs() {
+		if (!selectionRef || !groupRef || !componentRef) {
+			return
+		}
+		groupRef.remove()
+		componentRef.remove()
+		selectionRef.visible = true
+		groupRef = undefined
+		componentRef = undefined
+		selectionRef = undefined
 	}
 
 	/**
 	 * Event listeners
 	 */
 
-	on('TRANSFORM', transformNodes)
+	on('APPLY_TRANSFORMATION', applyTransformation)
+	on('EMIT_INPUT_TO_PLUGIN', handleUpdateFromUI)
 	figma.on('selectionchange', handleSelectionChange)
+	figma.on('close', handleClose)
 
 	showUI(ui, initialData)
 }

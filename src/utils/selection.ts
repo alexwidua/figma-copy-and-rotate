@@ -14,17 +14,12 @@ export function validateSelection(
 		}
 		const node: SceneNode = selection[0]
 		if (validNodes.indexOf(node.type) >= 0) {
-			const hasParentID: string = node.getSharedPluginData(
-				'radial_items',
-				'parentGroup'
-			)
-			if (
-				node.parent?.id === hasParentID ||
-				node.parent?.parent?.id === hasParentID
-			) {
-				return 'VALID_UPDATEABLE'
+			if (node.parent?.type === 'COMPONENT') {
+				return 'IS_INSTANCE'
+			} else if (node.type === 'GROUP' && hasComponentChild(node)) {
+				return 'HAS_COMPONENT'
 			} else {
-				return 'VALID_NONUPDATEABLE'
+				return 'VALID'
 			}
 		} else {
 			return 'INVALID'
