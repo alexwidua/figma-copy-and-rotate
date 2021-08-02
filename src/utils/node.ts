@@ -1,6 +1,6 @@
 /**
- * Create a component and put it in place of original node.
- * @param selection - Current page selection
+ * Componentize selection and apply the selection's transformations.
+ * @param selection
  * @returns {ComponentNode}
  */
 export function createComponentInPlace(selection: SceneNode): ComponentNode {
@@ -22,7 +22,7 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 	selection.parent?.appendChild(node)
 	node.appendChild(selection)
 
-	// Save properties, reset cloned node, revert back
+	// Store selection transformation, reset component and apply transformation
 	const tempX: LayoutMixin['x'] = selection.x
 	const tempY: LayoutMixin['y'] = selection.y
 	const tempDeg: LayoutMixin['rotation'] = selection.rotation
@@ -48,34 +48,3 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 
 	return node
 }
-
-// /**
-//  * Sets shared data which is used to update nodes later on
-//  * @param node - Node to be updated
-//  * @param parentGroup - Serializes the node's parent group, used later to check if component is instance child
-//  * @param options
-//  */
-// export function setSharedData(
-// 	node: SceneNode,
-// 	parentGroup: string,
-// 	options: TransformOptions
-// ): void {
-// 	// Namespace under which shared setting will be saved
-// 	const namespace: string = 'radial_items'
-// 	const {
-// 		numItems,
-// 		radius,
-// 		skipSelect,
-// 		skipSpecific,
-// 		skipEvery,
-// 		rotateItems
-// 	} = options
-
-// 	node.setSharedPluginData(namespace, 'parentGroup', parentGroup)
-// 	node.setSharedPluginData(namespace, 'numItems', numItems)
-// 	node.setSharedPluginData(namespace, 'radius', radius)
-// 	node.setSharedPluginData(namespace, 'skipSelect', skipSelect)
-// 	node.setSharedPluginData(namespace, 'skipEvery', skipEvery)
-// 	node.setSharedPluginData(namespace, 'skipSpecific', skipSpecific)
-// 	node.setSharedPluginData(namespace, 'rotateItems', rotateItems ? '1' : '0')
-// }
