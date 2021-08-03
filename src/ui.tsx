@@ -15,8 +15,8 @@ import {
 	DropdownOption,
 	Checkbox
 } from '@create-figma-plugin/ui'
-import { debounce } from './utils/ui'
 import { Preview, Slider } from './components'
+import { debounce } from './utils/ui'
 import './vars.css'
 import style from './style.css'
 
@@ -38,7 +38,7 @@ const Plugin = ({ selection, ui }: any) => {
 		VALID: 'Valid',
 		MULTIPLE: 'Group multiple selection before rotating'
 	}
-	const initSelection: SelectionLayout = {
+	const initSelection: SelectionProperties = {
 		height: selection.height,
 		width: selection.width,
 		rotation: selection.rotation,
@@ -62,7 +62,7 @@ const Plugin = ({ selection, ui }: any) => {
 
 	// Internal states
 	const [selectionProps, setSelectionProps] =
-		useState<SelectionLayout>(initSelection)
+		useState<SelectionProperties>(initSelection)
 	const [selectionState, setSelectionState] =
 		useState<SelectionState>('EMPTY')
 	const [showRadiusBadge, setShowRadiusBadge] = useState<boolean>(false)
@@ -262,20 +262,26 @@ const Plugin = ({ selection, ui }: any) => {
 		)
 	}
 
+	// Parsed values
+	const parsedNumItems = parseInt(numItems)
+	const parsedRadius = parseInt(radius)
+	const parsedSkipEvery = parseInt(skipEvery)
+	const mappedSkipSpecific = skipSpecific.split(',').map(Number)
+
 	return (
 		<div>
 			<Preview
 				uiWidth={ui.width}
 				selectionState={selectionState}
-				selectionHeight={selectionProps.height}
-				selectionWidth={selectionProps.width}
-				selectionRotation={selectionProps.rotation}
-				selectionType={selectionProps.type}
-				numItems={numItems}
-				itemRadius={radius}
+				selectionHeight={selectionProps.height || 100}
+				selectionWidth={selectionProps.width || 100}
+				selectionRotation={selectionProps.rotation || 0}
+				selectionType={selectionProps.type || 'RECTANGLE'}
+				numItems={parsedNumItems}
+				radius={parsedRadius}
 				skipSelect={skipSelect}
-				skipSpecific={skipSpecific}
-				skipEvery={skipEvery}
+				skipSpecific={mappedSkipSpecific}
+				skipEvery={parsedSkipEvery}
 				alignRadially={alignRadially}
 				isSweeping={isSweeping}
 				sweepAngle={sweepAngle}
@@ -285,7 +291,7 @@ const Plugin = ({ selection, ui }: any) => {
 				<Slider
 					onSweepChange={handleSweepChange}
 					onSweep={handleSweep}
-					numItems={numItems}
+					numItems={parsedNumItems}
 				/>
 			</Preview>
 			<Container space="medium">
@@ -377,7 +383,7 @@ const Plugin = ({ selection, ui }: any) => {
 						selectionState === 'INVALID' ||
 						selectionState === 'EMPTY' ||
 						selectionState === 'MULTIPLE' ||
-						skipSpecific.split(',').length === parseInt(numItems)
+						mappedSkipSpecific.length === parsedNumItems - 1
 					}>
 					{buttonMap[selectionState]}
 				</Button>

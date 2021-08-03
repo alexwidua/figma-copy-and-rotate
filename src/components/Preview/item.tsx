@@ -1,5 +1,5 @@
 /**
- * @file Item component that gets mapped radially. Expects to be a child of 'Preview'
+ * @file Individual item that gets mapped radially. Expects to be a child of ./Preview.
  */
 
 import { h } from 'preact'
@@ -26,26 +26,20 @@ const Item = ({
 	selectionRotation,
 	selectionType,
 	skipSelect,
-	skipSpecific,
-	skipEvery = '0',
-	rotateItems,
+	skipSpecific = [-1],
+	skipEvery = 0,
+	alignRadially,
 	showRadiusBadge,
 	showNumBadge,
 	elevateClick
 }: ItemProps) => {
 	const isValidSelection: boolean = selectionState === 'VALID'
 	const rotation: LayoutMixin['rotation'] = selectionRotation || 0
-
-	const specific: Array<number> = skipSpecific?.split(',').map(Number) || [-1]
-	const every: number = parseInt(skipEvery)
 	const isSkipped: boolean =
-		(skipSelect === 'EVERY' && every && !((index + 1) % every)) ||
-		(skipSelect === 'SPECIFIC' && specific.includes(index + 1))
+		(skipSelect === 'EVERY' && skipEvery && !((index + 1) % skipEvery)) ||
+		(skipSelect === 'SPECIFIC' && skipSpecific.includes(index + 1))
 
-	/**
-	 * Styles
-	 */
-
+	// Styles
 	const inlineItem: h.JSX.CSSProperties = {
 		width: itemWidth,
 		height: itemHeight,
@@ -59,7 +53,7 @@ const Item = ({
 				: 'var(--item-border-active)'
 			: 'var(--item-border-inactive)',
 		transform: `rotate(${
-			rotateItems ? angle + (rotation + 90) * -1 : rotation + -90
+			alignRadially ? angle + (rotation + 90) * -1 : rotation + -90
 		}deg)`,
 		background: isSkipped ? 'none' : 'var(--color-item-fill)',
 		borderRadius:
@@ -71,13 +65,15 @@ const Item = ({
 		background: isSkipped
 			? 'var(--color-item-inactive)'
 			: 'var(--color-local-accent)',
-		transform: `rotate(${rotateItems ? angle * -1 + rotation + 90 : 90}deg)`
+		transform: `rotate(${
+			alignRadially ? angle * -1 + rotation + 90 : 90
+		}deg)`
 	}
 
 	return (
 		<div
 			onClick={() => elevateClick()}
-			class={style.item}
+			class={`${style.item} ${index === 0 ? style.og : ''}`}
 			style={inlineItem}>
 			<span class={style.index} style={inlineIndex}>
 				{index + 1}

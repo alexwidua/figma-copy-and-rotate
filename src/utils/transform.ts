@@ -1,4 +1,8 @@
 /**
+ * @file Utility functions that concern node transformations.
+ */
+
+/**
  * Base rotation that is applied to transformation.
  * -90 because Figma sets origin (0°) to 3 o'clock.
  */
@@ -15,7 +19,7 @@ export function instantiateAndRotate(
 	node: ComponentNode,
 	numItems: number,
 	radius: number,
-	rotateItems: boolean,
+	alignRadially: boolean,
 	sweepAngle: number
 ): Array<InstanceNode> {
 	const collection: Array<InstanceNode> = []
@@ -54,7 +58,7 @@ export function instantiateAndRotate(
 				: diff * Math.sin(Math.abs(initRad))
 
 		// Rotate instances in circle
-		const translate: XY = {
+		const translate: Vector = {
 			x:
 				(r + w - normalizeRadius) * Math.cos(rad) +
 				w * Math.sin(rad) +
@@ -88,11 +92,11 @@ export function instantiateAndRotate(
 		const newY: LayoutMixin['y'] = e.y
 
 		const baseDegRad: number = baseDeg * -1 * (Math.PI / 180)
-		const newRad: number = rotateItems
+		const newRad: number = alignRadially
 			? rad + initRad + baseDegRad
 			: initRad
 
-		const rotateAroundOrigin: XY = {
+		const rotateAroundOrigin: Vector = {
 			x:
 				w -
 				w * Math.cos(newRad) +

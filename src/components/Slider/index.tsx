@@ -11,7 +11,7 @@ const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
 	// circle doesn't span from 0..360 degree, but from 0..(360-(360-numItems)).
 	// Because of that, we want to reduce the degree of freedom so the sweep doesn't
 	// yield unexpected results
-	const offset: number = 360 / parseInt(numItems)
+	const offset: number = 360 / numItems
 
 	const slider = useRef<HTMLDivElement>(null)
 	const [isMouseDown, setIsMouseDown] = useState<boolean>(false)
@@ -106,11 +106,11 @@ const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
 			const rect = slider.current?.getBoundingClientRect()
 
 			if (rect) {
-				const origin: XY = {
+				const origin: Vector = {
 					x: rect.width / 2 + rect.left,
 					y: rect.height / 2 + rect.top
 				}
-				const absolute: XY = {
+				const absolute: Vector = {
 					x: origin.x - e.clientX,
 					y: origin.y - e.clientY
 				}
