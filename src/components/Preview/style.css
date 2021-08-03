@@ -1,5 +1,5 @@
 /**
- * ./index.tsx
+ * Preview wrapper component
  */
 .wrapper {
 	position: relative;
@@ -83,9 +83,8 @@
 }
 
 /**
- * ./item.tsx
+ * Item component
  */
-
 .item {
 	position: absolute;
 	display: flex;
@@ -93,6 +92,18 @@
 	justify-content: center;
 	box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 	transition: box-shadow 0.2s, border-radius 0.2s;
+}
+
+.og {
+	/* border: 1px solid rgb(128, 128, 128) !important; */
+}
+
+.og:hover {
+	z-index: 0 !important;
+}
+
+.og .index {
+	background: #000 !important;
 }
 
 .item:hover {
