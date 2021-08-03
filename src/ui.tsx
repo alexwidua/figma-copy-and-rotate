@@ -1,9 +1,5 @@
-/**
- * @file ...
- */
-
 import { h } from 'preact'
-import { useState, useEffect } from 'preact/hooks'
+import { useState, useEffect, useCallback } from 'preact/hooks'
 import { on, emit } from '@create-figma-plugin/utilities'
 import {
 	render,
@@ -19,20 +15,22 @@ import {
 	DropdownOption,
 	Checkbox
 } from '@create-figma-plugin/ui'
+import { debounce } from './utils/ui'
+import { Preview, Slider } from './components'
 import './vars.css'
 import style from './style.css'
-import Preview from './components/Preview'
-import Slider from './components/Slider'
+
+type SelectionStateMap = { [type in SelectionState]: string }
 
 const Plugin = ({ selection, ui }: any) => {
 	/**
-	 * 💅 UI options
+	 * UI options
 	 */
 	const skipSelectOptions: Array<DropdownOption> = [
 		{ children: 'Skip instances', value: 'SPECIFIC' },
 		{ children: 'Skip every', value: 'EVERY' }
 	]
-	const buttonMap: SelectionTypeMap = {
+	const buttonMap: SelectionStateMap = {
 		EMPTY: 'No element selected',
 		INVALID: 'Selected type not supported',
 		IS_INSTANCE: 'TODO',
@@ -50,7 +48,7 @@ const Plugin = ({ selection, ui }: any) => {
 	const radiusToString: string = adaptiveRadius.toFixed(0)
 
 	/**
-	 * 💾 States
+	 * States
 	 */
 
 	// UI exposed states
@@ -59,32 +57,24 @@ const Plugin = ({ selection, ui }: any) => {
 	const [skipSelect, setSkipSelect] = useState<SkipType>('SPECIFIC')
 	const [skipSpecific, setSkipSpecific] = useState<string>('')
 	const [skipEvery, setSkipEvery] = useState<string>('')
-	const [rotateItems, setRotateItems] = useState<boolean>(true)
+	const [alignRadially, setAlignRadially] = useState<boolean>(true)
 	const [sweepAngle, setSweepAngle] = useState<number>(360)
 
 	// Internal states
-	const [selectionLayout, setSelectionLayout] =
+	const [selectionProps, setSelectionProps] =
 		useState<SelectionLayout>(initSelection)
-	const [selectionState, setSelectionState] = useState<SelectionType>('EMPTY')
+	const [selectionState, setSelectionState] =
+		useState<SelectionState>('EMPTY')
 	const [showRadiusBadge, setShowRadiusBadge] = useState<boolean>(false)
 	const [showNumBadge, setShowNumBadge] = useState<boolean>(false)
 	const [isSweeping, setIsSweeping] = useState<boolean>(false)
 
-	/**
-	 * 📎 Hooks
-	 */
-
-	// Set adaptive radius on startup
 	useEffect(() => {
-		if (selection) {
-			const { width, height } = selection
-			const average = (width + height) / 2
-			setRadius((average / 2).toFixed(1))
-		}
+		on('EMIT_SELECTION_CHANGE_TO_UI', handleSelectionChange)
 	}, [])
 
 	/**
-	 *  💪 Event handlers
+	 * Input handlers
 	 */
 	function handleNumItemsInput(
 		e: h.JSX.TargetedEvent<HTMLInputElement>
@@ -106,14 +96,12 @@ const Plugin = ({ selection, ui }: any) => {
 			const data: Partial<TransformOptions> = {
 				radius: parseInt(e.currentTarget.value)
 			}
-			emit('EMIT_INPUT_TO_PLUGIN', data)
+			debounceRadiusChange(data)
 		}
 		setShowRadiusBadge(true)
 	}
 
-	function handleSkipSelectMenu(
-		e: h.JSX.TargetedEvent<HTMLInputElement>
-	): void {
+	function handleSkipMenu(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
 		setSkipSelect(e.currentTarget.value as SkipType)
 		const data: Partial<TransformOptions> = {
 			skipSelect: e.currentTarget.value as SkipType
@@ -125,9 +113,17 @@ const Plugin = ({ selection, ui }: any) => {
 		e: h.JSX.TargetedEvent<HTMLInputElement>
 	): void {
 		const value = e.currentTarget.value
+		const map = e.currentTarget.value.split(',').map(Number)
+		if (map.length > parseInt(numItems) - 1) {
+			emit('EMIT_INPUT_TO_PLUGIN', {
+				skipSelect: 'SPECIFIC',
+				skipSpecific: []
+			})
+			return setSkipSpecific('')
+		}
 		setSkipSpecific(value)
 		const data: Partial<TransformOptions> = {
-			skipSpecific: e.currentTarget.value.split(',').map(Number)
+			skipSpecific: map
 		}
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
@@ -143,7 +139,7 @@ const Plugin = ({ selection, ui }: any) => {
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
-	function handleResetSkip() {
+	function clearSkipInputs() {
 		setSkipEvery('')
 		setSkipSpecific('')
 		const data: Partial<TransformOptions> = {
@@ -153,37 +149,46 @@ const Plugin = ({ selection, ui }: any) => {
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
-	function handleRotateItems(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
+	function handleAlignRadially(
+		e: h.JSX.TargetedEvent<HTMLInputElement>
+	): void {
 		const value = e.currentTarget.checked
-		setRotateItems(value)
+		setAlignRadially(value)
 		const data: Partial<TransformOptions> = {
-			rotateItems: e.currentTarget.checked
+			alignRadially: e.currentTarget.checked
 		}
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
 	function handleInstanceClick(index: number): void {
-		const mappedToNumberArr = skipSpecific.split(',').map(Number)
-
-		if (mappedToNumberArr[0] === 0) {
-			mappedToNumberArr.shift()
+		// index 0 is the original node and not skippable
+		if (index === 0) {
+			return
 		}
-
-		const isAlreadySelected = mappedToNumberArr.indexOf(index + 1)
-
+		let map: Array<number> = []
+		if (skipSpecific) {
+			map = skipSpecific.split(',').map(Number)
+		}
+		if (map.length > parseInt(numItems) - 2) {
+			emit('EMIT_INPUT_TO_PLUGIN', {
+				skipSelect: 'SPECIFIC',
+				skipSpecific: []
+			})
+			return setSkipSpecific('')
+		}
+		const isAlreadySelected = map.indexOf(index + 1)
 		if (isAlreadySelected > -1) {
-			mappedToNumberArr.splice(isAlreadySelected, 1)
+			map.splice(isAlreadySelected, 1)
 		} else {
-			mappedToNumberArr.push(index + 1)
+			map.push(index + 1)
 		}
-
-		const stringifyArr: string = mappedToNumberArr.toString()
+		const stringified: string = map.toString()
 		setSkipSelect('SPECIFIC')
-		setSkipSpecific(stringifyArr)
+		setSkipSpecific(stringified)
 
 		const data: Partial<TransformOptions> = {
 			skipSelect: 'SPECIFIC',
-			skipSpecific: mappedToNumberArr
+			skipSpecific: map
 		}
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
@@ -194,7 +199,7 @@ const Plugin = ({ selection, ui }: any) => {
 		const data: Partial<TransformOptions> = {
 			sweepAngle
 		}
-		emit('EMIT_INPUT_TO_PLUGIN', data)
+		debounceSweepChange(data)
 	}
 
 	function handleSweep(isSweeping: boolean): void {
@@ -205,22 +210,36 @@ const Plugin = ({ selection, ui }: any) => {
 		emit('APPLY_TRANSFORMATION')
 	}
 
-	/**
-	 * 👂 Event listeners
-	 */
-	function handleSelectionChange({ selectionType, selection }: any): void {
-		setSelectionState(selectionType)
-
-		if (selectionType === 'VALID') {
-			const { width, height, rotation, type } = selection
-			setSelectionLayout({ width, height, rotation, type })
+	function handleSelectionChange({ state, properties }: any): void {
+		setSelectionState(state)
+		console.log(properties)
+		if (state === 'VALID') {
+			const { width, height, rotation, type } = properties
+			setSelectionProps({
+				width: Math.round(width),
+				height: Math.round(height),
+				rotation: Math.round(rotation),
+				type: type
+			})
 		}
 	}
-	on('EMIT_SELECTION_CHANGE_TO_UI', handleSelectionChange)
 
-	/**
-	 *  Validators
-	 */
+	// Debounce events
+	const emitInputChange = (data: any) => {
+		emit('EMIT_INPUT_TO_PLUGIN', data)
+	}
+
+	const debounceSweepChange = useCallback(
+		debounce((data) => emitInputChange(data), 200),
+		[]
+	)
+
+	const debounceRadiusChange = useCallback(
+		debounce((data) => emitInputChange(data), 200),
+		[]
+	)
+
+	// Input validators
 	function validateMinValue(
 		value: null | number,
 		min: number
@@ -231,7 +250,7 @@ const Plugin = ({ selection, ui }: any) => {
 	function validateSkipSpecific(value: string): string | boolean {
 		const split = value.split(',').map(Number)
 		const temp: any = split.filter(
-			(e, i) => e > 0 && e % 1 == 0 && split.indexOf(e) == i
+			(e, i) => e > 1 && e % 1 == 0 && split.indexOf(e) == i
 		)
 		return temp.toString()
 	}
@@ -248,16 +267,16 @@ const Plugin = ({ selection, ui }: any) => {
 			<Preview
 				uiWidth={ui.width}
 				selectionState={selectionState}
-				selectionHeight={selectionLayout.height}
-				selectionWidth={selectionLayout.width}
-				selectionRotation={selectionLayout.rotation}
-				selectionType={selectionLayout.type}
+				selectionHeight={selectionProps.height}
+				selectionWidth={selectionProps.width}
+				selectionRotation={selectionProps.rotation}
+				selectionType={selectionProps.type}
 				numItems={numItems}
 				itemRadius={radius}
 				skipSelect={skipSelect}
 				skipSpecific={skipSpecific}
 				skipEvery={skipEvery}
-				rotateItems={rotateItems}
+				alignRadially={alignRadially}
 				isSweeping={isSweeping}
 				sweepAngle={sweepAngle}
 				showRadiusBadge={showRadiusBadge}
@@ -298,7 +317,7 @@ const Plugin = ({ selection, ui }: any) => {
 				<Columns space="small">
 					<Dropdown
 						value={skipSelect}
-						onChange={handleSkipSelectMenu}
+						onChange={handleSkipMenu}
 						options={skipSelectOptions}
 					/>
 					{skipSelect === 'SPECIFIC' && (
@@ -317,7 +336,7 @@ const Plugin = ({ selection, ui }: any) => {
 							/>
 							{skipSpecific && (
 								<span
-									onClick={handleResetSkip}
+									onClick={clearSkipInputs}
 									class={style.textboxClear}
 								/>
 							)}
@@ -332,10 +351,14 @@ const Plugin = ({ selection, ui }: any) => {
 								placeholder={'Skip every <n>th item'}
 								onFocusCapture={() => setShowNumBadge(true)}
 								onBlurCapture={() => setShowNumBadge(false)}
+								style={{
+									paddingRight:
+										'calc(var(--local-icon-size) * 2)'
+								}}
 							/>
 							{skipEvery && (
 								<span
-									onClick={handleResetSkip}
+									onClick={clearSkipInputs}
 									class={style.textboxClear}
 								/>
 							)}
@@ -343,7 +366,7 @@ const Plugin = ({ selection, ui }: any) => {
 					)}
 				</Columns>
 				<VerticalSpace space="medium" />
-				<Checkbox onChange={handleRotateItems} value={rotateItems}>
+				<Checkbox onChange={handleAlignRadially} value={alignRadially}>
 					<Text>Align instances radially</Text>
 				</Checkbox>
 				<VerticalSpace space="medium" />
