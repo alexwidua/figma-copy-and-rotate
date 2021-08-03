@@ -1,10 +1,10 @@
 /**
- * @file Preview wrapper component that shows a preview of the radial pattern.
+ * @file Preview component that enables the user to view and modify the radial pattern.
  */
 
 import { h } from 'preact'
 import style from './style.css'
-import { baseDeg } from '../../core/transform'
+import { baseDeg } from '../../utils/transform'
 import Item from './item'
 
 const Preview = ({
@@ -15,11 +15,11 @@ const Preview = ({
 	selectionRotation,
 	selectionType,
 	numItems,
-	itemRadius,
+	radius,
 	skipSelect,
 	skipSpecific,
 	skipEvery,
-	rotateItems,
+	alignRadially,
 	isSweeping,
 	sweepAngle,
 	showRadiusBadge,
@@ -27,69 +27,68 @@ const Preview = ({
 	onInstanceClick,
 	children
 }: PreviewProps) => {
-	// Padding of items to preview container bounds
-	const padding: number = 80
+	const previewPadding: number = 60
 
-	const length: number = parseInt(numItems)
+	const length: number = numItems
 	const width: LayoutMixin['width'] = selectionWidth
 	const height: LayoutMixin['height'] = selectionHeight
 	const isWiderOrSquare: boolean = width >= height
-	const radius: number = parseInt(itemRadius)
+	// const radius: number = parseInt(itemRadius)
 	const diameter: number = radius * 2
 
 	// Scale items down if item size + radius exceed preview container bounds
 	const factor: number = isWiderOrSquare
-		? (width * 2 + diameter) / (uiWidth - padding)
-		: (height * 2 + diameter) / (uiWidth - padding)
+		? (width * 2 + diameter) / (uiWidth - previewPadding)
+		: (height * 2 + diameter) / (uiWidth - previewPadding)
 
-	const proportionalHeight: number = height / factor
-	const proportionalWidth: number = width / factor
-	const proportionalRadius: number = radius / factor
+	// Proportional height, width and radius
+	const propHeight: number = height / factor
+	const propWidth: number = width / factor
+	const propRadius: number = radius / factor
+	const d = propRadius * 2
 
 	/**
 	 * Map items radially
 	 */
 	const circle = Array.from({ length }, (e, i) => {
-		// Pulled from ./core/transform.ts
-		const deg: number =
-			baseDeg + (sweepAngle / (parseInt(numItems) - 1)) * i
+		// See ./core/transform.ts
+		// We subtract 1 from numItems to account for the sweep offset, see ./Slider
+		const deg: number = baseDeg + (sweepAngle / (numItems - 1)) * i
 		const rad: number = deg * (Math.PI / 180)
 
 		// Normalize shape if item is oblong
-		const diff: number = Math.abs(proportionalWidth - proportionalHeight)
+		const diff: number = Math.abs(propWidth - propHeight)
 		const normalizeShape: number =
-			proportionalWidth >= proportionalHeight
+			propWidth >= propHeight
 				? -((diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180)))
 				: (diff / 2) * Math.cos(Math.abs(deg) * (Math.PI / 180))
 
 		const normRadian: number = selectionRotation * (Math.PI / 180)
 		const normalizeRadius: number =
-			proportionalWidth === proportionalHeight
+			propWidth === propHeight
 				? 0
-				: proportionalWidth > proportionalHeight
-				? -proportionalHeight * Math.sin(Math.abs(normRadian))
-				: proportionalWidth * Math.sin(Math.abs(normRadian))
+				: propWidth > propHeight
+				? (-diff / 2) * Math.sin(Math.abs(normRadian))
+				: (diff / 2) * Math.sin(Math.abs(normRadian))
 
 		const x: number =
-			(proportionalRadius + proportionalWidth / 2 - normalizeRadius) *
-				Math.cos(rad) +
-			(proportionalRadius * 2 + proportionalWidth) / 2 -
-			proportionalWidth / 2 +
+			(propRadius + propWidth / 2 - normalizeRadius) * Math.cos(rad) +
+			(d + propWidth) / 2 -
+			propWidth / 2 +
 			normalizeShape
 
 		const y: number =
-			(proportionalRadius + proportionalHeight / 2 - normalizeRadius) *
-				Math.sin(rad) +
-			(proportionalRadius * 2 + proportionalHeight) / 2 -
-			proportionalHeight / 2
+			(propRadius + propHeight / 2 - normalizeRadius) * Math.sin(rad) +
+			(d + propHeight) / 2 -
+			propHeight / 2
 
 		return (
 			<Item
 				index={i}
 				x={x}
 				y={y}
-				itemHeight={proportionalHeight}
-				itemWidth={proportionalWidth}
+				itemHeight={propHeight}
+				itemWidth={propWidth}
 				angle={deg}
 				selectionState={selectionState}
 				selectionRotation={selectionRotation}
@@ -97,7 +96,7 @@ const Preview = ({
 				skipSelect={skipSelect}
 				skipSpecific={skipSpecific}
 				skipEvery={skipEvery}
-				rotateItems={rotateItems}
+				alignRadially={alignRadially}
 				showRadiusBadge={showRadiusBadge}
 				showNumBadge={showNumBadge}
 				elevateClick={() => onInstanceClick(i)}
@@ -111,18 +110,14 @@ const Preview = ({
 	}
 
 	const inlineContainer: h.JSX.CSSProperties = {
-		height: proportionalRadius * 2 + proportionalHeight,
-		width: proportionalRadius * 2 + proportionalWidth,
+		height: d + propHeight,
+		width: d + propWidth,
 		pointerEvents: isSweeping ? 'none' : 'all'
 	}
 
 	const inlineCircumference: h.JSX.CSSProperties = {
-		height: isWiderOrSquare
-			? proportionalRadius * 2 + proportionalWidth
-			: proportionalRadius * 2 + proportionalHeight,
-		width: isWiderOrSquare
-			? proportionalRadius * 2 + proportionalWidth
-			: proportionalRadius * 2 + proportionalHeight
+		height: isWiderOrSquare ? d + propWidth : d + propHeight,
+		width: isWiderOrSquare ? d + propWidth : d + propHeight
 	}
 
 	const inlineRadius: h.JSX.CSSProperties = {
@@ -130,8 +125,8 @@ const Preview = ({
 	}
 
 	const inlineDistance: h.JSX.CSSProperties = {
-		height: `${parseInt(itemRadius) / factor}px`,
-		top: `${(parseInt(itemRadius) / factor) * -1}px`
+		height: `${radius / factor}px`,
+		top: `${(radius / factor) * -1}px`
 	}
 
 	return (
