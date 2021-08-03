@@ -1,18 +1,18 @@
 /**
- * @file Main entry file of the plugin.
+ * @file The plugin's main file.
  */
 
-import { on, emit, showUI, once } from '@create-figma-plugin/utilities'
+import { on, emit, showUI } from '@create-figma-plugin/utilities'
 import { instantiateAndRotate } from './utils/transform'
 import { createComponentInPlace } from './utils/node'
-import { validateSelection, hasComponentChild } from './utils/selection'
+import { validateSelection } from './utils/selection'
 
 export default function () {
 	/**
 	 * Initial data that is sent to UI on plugin startup
 	 */
 	const ui: UISettings = { width: 280, height: 502 }
-	const initialData: { selection: SelectionLayout; ui: UISettings } = {
+	const initialData: { selection: SelectionProperties; ui: UISettings } = {
 		selection: {
 			width: figma.currentPage.selection[0]?.width || 100,
 			height: figma.currentPage.selection[0]?.height || 100,
@@ -27,8 +27,8 @@ export default function () {
 	 */
 	const validNodeTypes: Array<NodeType> = [
 		// 'BOOLEAN_OPERATION',
-		// 'COMPONENT',
-		// 'ELLIPSE',
+		'COMPONENT',
+		'ELLIPSE',
 		// 'FRAME',
 		'GROUP',
 		// 'INSTANCE',
@@ -41,23 +41,34 @@ export default function () {
 	]
 
 	// Internal plugin state
-	let TRANSFORMATION = false
+	let FLAG_TRANSFORM_SUCCESS = false
 	let state: TransformOptions = {
 		numItems: 8,
 		radius: 50,
 		skipSelect: 'SPECIFIC',
 		skipSpecific: [0],
 		skipEvery: 0,
-		rotateItems: true,
+		alignRadially: true,
 		sweepAngle: 360
 	}
+
+	/**
+	 * Node references which are the heart of the in canvas preview.
+	 * {selectionRef} is a temporary carbon copy of the selected node to
+	 * revert everything if the user deselects/closes the plugin.
+	 * {groupRef} holds the actual circle with transformed instances
+	 * {componentRef} holds the componentized original selected node
+	 */
 	let selectionRef: SceneNode | undefined
 	let groupRef: GroupNode | undefined
 	let componentRef: ComponentNode | undefined
 
-	// Handle selection change...
-	function handleSelectionChange() {
-		const str: SelectionType = validateSelection(
+	/**
+	 * Creates in-canvas preview and updates the UI with
+	 * the selection's properties.
+	 */
+	function handleSelectionChange(): void {
+		const str: SelectionState = validateSelection(
 			figma.currentPage.selection,
 			validNodeTypes
 		)
@@ -66,39 +77,41 @@ export default function () {
 			removeRefs()
 		} else if (selectionRef && groupRef && componentRef) {
 			removeRefs()
-			componentizeSelection(figma.currentPage.selection[0])
+			componentizeNode(figma.currentPage.selection[0])
+			updateCanvasPreview()
 		} else {
-			componentizeSelection(figma.currentPage.selection[0])
+			componentizeNode(figma.currentPage.selection[0])
+			updateCanvasPreview()
 		}
 
-		const data = {
-			selectionType: str,
-			selection: {
-				width: selectionRef?.width,
-				height: selectionRef?.height,
-				rotation: selectionRef?.rotation,
-				type: selectionRef?.type
+		const msg: SelectionMessage = {
+			state: str,
+			properties: {
+				width: componentRef?.width,
+				height: componentRef?.height,
+				rotation: componentRef?.rotation,
+				type: componentRef?.type
 			}
 		}
-		emit('EMIT_SELECTION_CHANGE_TO_UI', data)
+		emit('EMIT_SELECTION_CHANGE_TO_UI', msg)
 	}
 
-	// Handle input changes
-	function handleUpdateFromUI(data: any) {
-		state = { ...state, ...data }
-		if (groupRef && componentRef) {
-			groupRef.remove()
-			groupRef = undefined
-			updatePreview()
-		}
-	}
-
-	// Componentize selection
-	function componentizeSelection(selection: SceneNode) {
+	/**
+	 * Componentizes the supplied node (should be current selection).
+	 * This is required because the InCanvasPreview expects a ComponentNode.
+	 * @param selection
+	 * @returns - Returns NotificationHandler on error.
+	 */
+	function componentizeNode(
+		selection: SceneNode
+	): NotificationHandler | undefined {
+		// If we componentize a selection that is made via the layer menu,
+		// it invokes the selection handler multiple times which in turn
+		// recursively compinentizes all children.
+		// Not sure if this is a bug, but we can catch it here.
 		if (!selection) {
 			return figma.notify('Please select nodes via the canvas.')
 		}
-		// Store reference to selected node in case plugin is closed/selection dismissed
 		selectionRef = selection.clone()
 		selectionRef.visible = false
 
@@ -108,20 +121,20 @@ export default function () {
 			componentRef = createComponentInPlace(selection)
 		}
 		componentRef.name = 'Preview'
-		updatePreview()
 	}
 
-	// Updates canvas preview
-	function updatePreview() {
+	/**
+	 * Updates the in canvas preview after selection or UI input changes.
+	 */
+	function updateCanvasPreview(): void {
 		if (!componentRef) {
 			return
 		}
-
 		const circle: Array<InstanceNode> = instantiateAndRotate(
 			componentRef,
 			state.numItems,
 			state.radius,
-			state.rotateItems,
+			state.alignRadially,
 			state.sweepAngle
 		)
 		const parent = componentRef.parent || figma.currentPage
@@ -133,8 +146,7 @@ export default function () {
 		groupRef.x = groupRef.x + alignX
 		groupRef.y = groupRef.y + alignY
 
-		groupRef.name = '[Preview] Rotated Instances'
-		groupRef.opacity = 0.3
+		setPreviewProperties(true)
 
 		if (state.skipSpecific.length || state.skipEvery > 1) {
 			if (state.skipSelect === 'SPECIFIC') {
@@ -154,14 +166,17 @@ export default function () {
 		}
 	}
 
-	// Applies the temporary transformation, cleans up and closes plugin.
-	function applyTransformation() {
+	/**
+	 * Applies the in canvas preview by appending componentRef to groupRef
+	 * and doing some additional cleanup.
+	 */
+	function applyTransformation(): void {
 		if (!selectionRef || !groupRef || !componentRef) {
-			return console.log(
+			return console.error(
 				`Couldn't apply transformation. References are missing`
 			)
 		}
-		// Remove first instance and replace with original selected node
+		// Replace the first instance and append the component to the group
 		const getFirstChild: SceneNode = groupRef.children[0]
 		componentRef.rotation = getFirstChild.rotation
 		componentRef.x = getFirstChild.x
@@ -170,24 +185,55 @@ export default function () {
 		getFirstChild.remove()
 		groupRef.insertChild(0, componentRef)
 
+		// Discard our backup carbon copy and change the visual properties of groupRef
 		selectionRef.remove()
-		groupRef.opacity = 1
-		groupRef.name = 'Rotated Instances'
-		TRANSFORMATION = true
+		setPreviewProperties(false)
 
+		// Set flag to avoid preview cleanup on close
+		FLAG_TRANSFORM_SUCCESS = true
 		figma.closePlugin()
 	}
 
-	// Remove transformation preview before closing
-	function handleClose() {
-		if (TRANSFORMATION) return
+	function handleClose(): void {
+		if (FLAG_TRANSFORM_SUCCESS) return
 		else if (selectionRef && groupRef && componentRef) {
 			removeRefs()
 		}
 	}
 
-	// Utility func that removes all stored references.
-	function removeRefs() {
+	/**
+	 * Re-renders the circle on UI input change.
+	 */
+	function handleUpdateFromUI(data: any): void {
+		state = { ...state, ...data }
+		if (groupRef && componentRef) {
+			groupRef.remove()
+			groupRef = undefined
+			updateCanvasPreview()
+		}
+	}
+
+	/**
+	 * Utility function that toggles the group refs visual properties.
+	 * @param isPreview
+	 */
+	function setPreviewProperties(isPreview: boolean): void {
+		if (!groupRef) {
+			return console.error(
+				`Couldn't set groupRef preview properties. Reference is missing.`
+			)
+		}
+		groupRef.opacity = isPreview ? 0.3 : 1
+		groupRef.locked = isPreview ? true : false
+		groupRef.name = isPreview
+			? '[Preview] Rotated Instances'
+			: 'Rotated Instances'
+	}
+
+	/**
+	 * Utility function that removes and unbinds referenced nodes.
+	 */
+	function removeRefs(): void {
 		if (!selectionRef || !groupRef || !componentRef) {
 			return
 		}
@@ -199,14 +245,17 @@ export default function () {
 		selectionRef = undefined
 	}
 
-	/**
-	 * Event listeners
-	 */
-
+	// Listeners
 	on('APPLY_TRANSFORMATION', applyTransformation)
 	on('EMIT_INPUT_TO_PLUGIN', handleUpdateFromUI)
 	figma.on('selectionchange', handleSelectionChange)
 	figma.on('close', handleClose)
 
+	// Action, baby 🎉
 	showUI(ui, initialData)
+	if (figma.currentPage.selection.length) {
+		const selection = figma.currentPage.selection[0]
+		state = { ...state, radius: (selection.width + selection.height) / 4 }
+	}
+	handleSelectionChange()
 }
