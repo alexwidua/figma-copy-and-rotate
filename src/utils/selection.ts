@@ -1,4 +1,8 @@
 /**
+ * @file Utility functions that concern page selection queries.
+ */
+
+/**
  * Checks if current selection is empty, multiple, valid or updateable.
  * @param selection - Current page selection
  * @param validNodes - Array containing all valid node types
@@ -7,7 +11,7 @@
 export function validateSelection(
 	selection: ReadonlyArray<SceneNode>,
 	validNodes: Array<String>
-): SelectionType {
+): SelectionState {
 	if (selection.length) {
 		if (selection.length > 1) {
 			return 'MULTIPLE'
@@ -30,8 +34,8 @@ export function validateSelection(
 }
 
 /**
- * Recursively searchs for component children that would prevent componentizing parent node.
- * @param selection - Current selecetd node
+ * Recursively search for child components that would prevent componentizing parent node.
+ * @param selection
  * @returns - truthy value if component child has been found
  */
 export function hasComponentChild(selection: SceneNode): boolean | undefined {

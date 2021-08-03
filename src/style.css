@@ -1,4 +1,4 @@
-/* Wrap the ui library's <TextBox/> component to display a clear icon after value input */
+/* Wrap the ui library's <TextBox/> component to display a 'clear' icon after value input */
 .textboxWrapper {
 	--local-icon-stroke-width: 1px;
 	--local-icon-size: 12px;

@@ -37,8 +37,6 @@
 	content: '';
 }
 
-/* Handle spans from center to the circle's edge, but we attach a dot at the
-end which acts as visible faux handle */
 .handle {
 	position: absolute;
 	top: 0;

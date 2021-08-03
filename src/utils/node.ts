@@ -1,4 +1,8 @@
 /**
+ * @file Utility functions that concern node property changes.
+ */
+
+/**
  * Componentize selection and apply the selection's transformations.
  * @param selection
  * @returns {ComponentNode}
@@ -55,7 +59,7 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
  * to allow for smooth scaling after transformation has been applied.
  * @param node
  */
-function constrainChildrenToCenter(node: ChildrenMixin) {
+function constrainChildrenToCenter(node: ChildrenMixin): void {
 	node.children.forEach((e) => {
 		if (e.type === 'GROUP') {
 			constrainChildrenToCenter(e)

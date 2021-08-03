@@ -1,4 +1,8 @@
 /**
+ * @file Utility functions that concern the plugin's UI.
+ */
+
+/**
  * Debounce utility, used here to debounce input changes which render expensive transforms.
  * @param callback - Input func
  * @param wait - Wait for x ms before triggering input func
