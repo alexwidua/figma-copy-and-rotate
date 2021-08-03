@@ -16,7 +16,7 @@
 	z-index: 100;
 	width: var(--local-icon-size);
 	height: var(--local-icon-size);
-	background: var(--color-local-accent);
+	background: var(--local-color-accent);
 	border-radius: 100%;
 	transform: translateY(-50%);
 	cursor: pointer;

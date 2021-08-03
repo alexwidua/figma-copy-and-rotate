@@ -51,14 +51,18 @@ const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
 	const inlineBar: h.JSX.CSSProperties = {
 		background: `
 		conic-gradient(
-			${isMouseDown ? 'var(--color-local-accent)' : 'var(--color-container-bg)'} 0deg,
 			${
 				isMouseDown
-					? 'var(--color-local-accent)'
-					: 'var(--color-container-bg)'
+					? 'var(--local-color-accent)'
+					: 'var(--local-color-container-bg)'
+			} 0deg,
+			${
+				isMouseDown
+					? 'var(--local-color-accent)'
+					: 'var(--local-color-container-bg)'
 			} ${sweepAngle}deg,
-			var(--color-container-bg) ${sweepAngle + 0.01}deg,
-			var(--color-container-bg) 360deg
+			var(--local-color-container-bg) ${sweepAngle + 0.01}deg,
+			var(--local-color-container-bg) 360deg
 			)
 			`
 	}

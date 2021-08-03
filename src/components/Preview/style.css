@@ -6,13 +6,13 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: var(--color-container-bg);
+	background-color: var(--local-color-container-bg);
 }
 
 .container {
 	position: relative;
 	display: block;
-	background: var(--color-container-bg);
+	background: var(--local-color-container-bg);
 }
 
 /* Circumference helper line */
@@ -47,9 +47,9 @@
 	top: 50%;
 	left: 8px;
 	padding: 2px 4px;
-	color: var(--color-local-white);
+	color: var(--local-color-white);
 	background: var(--color-red);
-	border-radius: var(--border-radius-3);
+	border-radius: var(--local-border-radius-3);
 	transform: translateY(-50%);
 }
 
@@ -112,11 +112,14 @@
 	cursor: pointer;
 }
 
+/* Num badge that displays the instance's index */
 .index {
 	display: block;
 	width: 16px;
+	min-width: 16px;
 	height: 16px;
-	color: var(--color-local-white);
+	min-height: 16px;
+	color: var(--local-color-white);
 	text-align: center;
 	border-radius: 100%;
 	cursor: pointer;

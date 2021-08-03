@@ -49,13 +49,13 @@ const Item = ({
 			? '0.1px solid var(--color-red)'
 			: isValidSelection
 			? isSkipped
-				? 'var(--item-border-deselected)'
-				: 'var(--item-border-active)'
-			: 'var(--item-border-inactive)',
+				? 'var(--local-item-border-deselected)'
+				: 'var(--local-item-border-active)'
+			: 'var(--local-item-border-inactive)',
 		transform: `rotate(${
 			alignRadially ? angle + (rotation + 90) * -1 : rotation + -90
 		}deg)`,
-		background: isSkipped ? 'none' : 'var(--color-item-fill)',
+		background: isSkipped ? 'none' : 'var(--local-color-item-fill)',
 		borderRadius:
 			selectionType === 'ELLIPSE' ? '100%' : 'var(--border-radius-2)'
 	}
@@ -63,8 +63,8 @@ const Item = ({
 	const inlineIndex: h.JSX.CSSProperties = {
 		opacity: showNumBadge ? 1 : 0,
 		background: isSkipped
-			? 'var(--color-item-inactive)'
-			: 'var(--color-local-accent)',
+			? 'var(--local-color-item-inactive)'
+			: 'var(--local-color-accent)',
 		transform: `rotate(${
 			alignRadially ? angle * -1 + rotation + 90 : 90
 		}deg)`
