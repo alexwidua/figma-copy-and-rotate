@@ -46,5 +46,21 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 		}
 	}
 
+	constrainChildrenToCenter(node)
 	return node
+}
+
+/**
+ * Recursively search for child nodes and constraint them to center
+ * to allow for smooth scaling after transformation has been applied.
+ * @param node
+ */
+function constrainChildrenToCenter(node: ChildrenMixin) {
+	node.children.forEach((e) => {
+		if (e.type === 'GROUP') {
+			constrainChildrenToCenter(e)
+		} else if ('constraints' in e) {
+			e.constraints = { horizontal: 'CENTER', vertical: 'CENTER' }
+		}
+	})
 }
