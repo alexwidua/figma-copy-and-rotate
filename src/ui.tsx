@@ -33,10 +33,10 @@ const Plugin = ({ selection, ui }: any) => {
 	const buttonMap: SelectionStateMap = {
 		EMPTY: 'No element selected',
 		INVALID: 'Selected type not supported',
-		IS_INSTANCE: 'TODO',
-		HAS_COMPONENT: 'TODO',
-		VALID: 'Valid',
-		MULTIPLE: 'Group multiple selection before rotating'
+		IS_INSTANCE: `Can't rotate instances`,
+		HAS_COMPONENT: `Can't rotate group containing component`,
+		VALID: 'Apply rotation',
+		MULTIPLE: 'Group multiple elements before rotating'
 	}
 	const initSelection: SelectionProperties = {
 		height: selection.height,
@@ -285,7 +285,12 @@ const Plugin = ({ selection, ui }: any) => {
 	const mappedSkipSpecific = skipSpecific.split(',').map(Number)
 
 	return (
-		<div>
+		<div
+			style={
+				inCanvasPreview
+					? '--local-color-purple: #7b61ff'
+					: '--local-color-purple: #18a0fb'
+			}>
 			<Preview
 				uiWidth={ui.width}
 				selectionState={selectionState}
@@ -310,7 +315,16 @@ const Plugin = ({ selection, ui }: any) => {
 					numItems={parsedNumItems}
 				/>
 			</Preview>
-			<Container space="medium">
+			<div class={style.checkboxContainer}>
+				<div class={style.checkbox}>
+					<Checkbox
+						onChange={handleInCanvasPreview}
+						value={inCanvasPreview}>
+						<Text>Live preview</Text>
+					</Checkbox>
+				</div>
+			</div>
+			<Container space="small">
 				<VerticalSpace space="medium" />
 				<Columns space="small">
 					<TextboxNumeric
@@ -343,7 +357,7 @@ const Plugin = ({ selection, ui }: any) => {
 						options={skipSelectOptions}
 					/>
 					{skipSelect === 'SPECIFIC' && (
-						<div class={style.textboxWrapper}>
+						<div class={style.textboxContainer}>
 							<Textbox
 								value={skipSpecific}
 								onInput={handleSkipSpecificInput}
@@ -365,7 +379,7 @@ const Plugin = ({ selection, ui }: any) => {
 						</div>
 					)}
 					{skipSelect === 'EVERY' && (
-						<div class={style.textboxWrapper}>
+						<div class={style.textboxContainer}>
 							<Textbox
 								value={skipEvery}
 								onInput={handleSkipEveryInput}
@@ -391,19 +405,19 @@ const Plugin = ({ selection, ui }: any) => {
 				<Checkbox onChange={handleAlignRadially} value={alignRadially}>
 					<Text>Align instances radially</Text>
 				</Checkbox>
-				<Checkbox
-					onChange={handleInCanvasPreview}
-					value={inCanvasPreview}>
-					<Text>Live preview</Text>
-				</Checkbox>
+				{/* <VerticalSpace space="medium" /> */}
+
 				<VerticalSpace space="medium" />
 				<Button
 					onClick={handleButtonClick}
 					fullWidth
 					disabled={
-						selectionState === 'INVALID' ||
-						selectionState === 'EMPTY' ||
-						selectionState === 'MULTIPLE' ||
+						(selectionState as SelectionState) === 'INVALID' ||
+						(selectionState as SelectionState) === 'EMPTY' ||
+						(selectionState as SelectionState) === 'MULTIPLE' ||
+						(selectionState as SelectionState) ===
+							'HAS_COMPONENT' ||
+						(selectionState as SelectionState) === 'IS_INSTANCE' ||
 						mappedSkipSpecific.length === parsedNumItems - 1
 					}>
 					{buttonMap[selectionState]}

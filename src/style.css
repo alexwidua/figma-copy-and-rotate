@@ -1,8 +1,24 @@
+.checkboxContainer {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: calc(var(--space-small) * -1);
+	padding: var(--space-small);
+	background: var(--local-color-container-bg);
+}
+
+.checkboxContainer .checkbox {
+	display: inline-block;
+	padding: var(--space-extra-small);
+	background: #fff;
+	border-radius: var(--local-border-radius-3);
+	box-shadow: var(--local-box-shadow-subtle);
+}
+
 /* Wrap the ui library's <TextBox/> component to display a 'clear' icon after value input */
-.textboxWrapper {
+.textboxContainer {
 	--local-icon-stroke-width: 1px;
-	--local-icon-size: 12px;
-	--local-icon-padding-right: 8px;
+	--local-icon-size: var(--space-small);
+	--local-icon-padding-right: var(--space-extra-small);
 
 	position: relative;
 	width: 100%;
