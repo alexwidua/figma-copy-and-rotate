@@ -11,7 +11,7 @@ export default function () {
 	/**
 	 * Initial data that is sent to UI on plugin startup
 	 */
-	const ui: UISettings = { width: 280, height: 502 }
+	const ui: UISettings = { width: 280, height: 538 }
 	const initialData: { selection: SelectionProperties; ui: UISettings } = {
 		selection: {
 			width: figma.currentPage.selection[0]?.width || 100,
@@ -24,7 +24,7 @@ export default function () {
 
 	// Internal plugin state
 	let FLAG_TRANSFORM_SUCCESS = false
-	let FLAG_IN_CANVAS_PREVIEW = true
+	let FLAG_SHOW_PREVIEW = true
 
 	let state: TransformOptions = {
 		numItems: 8,
@@ -52,11 +52,12 @@ export default function () {
 	 * the selection's properties.
 	 */
 	function handleSelectionChange(): void {
+		let msg: SelectionMessage
 		const str: SelectionState = validateSelection(
 			figma.currentPage.selection
 		)
 
-		if (FLAG_IN_CANVAS_PREVIEW) {
+		if (FLAG_SHOW_PREVIEW) {
 			if (
 				str.match(
 					/^(EMPTY|INVALID|IS_INSTANCE|HAS_COMPONENT|MULTIPLE)$/
@@ -71,15 +72,24 @@ export default function () {
 				componentizeNode(figma.currentPage.selection[0])
 				updateCanvasPreview()
 			}
-		}
-
-		const msg: SelectionMessage = {
-			state: str,
-			properties: {
-				width: componentRef?.width,
-				height: componentRef?.height,
-				rotation: componentRef?.rotation,
-				type: componentRef?.type
+			msg = {
+				state: str,
+				properties: {
+					width: componentRef?.width,
+					height: componentRef?.height,
+					rotation: componentRef?.rotation,
+					type: componentRef?.type
+				}
+			}
+		} else {
+			msg = {
+				state: str,
+				properties: {
+					width: figma.currentPage.selection[0]?.width,
+					height: figma.currentPage.selection[0]?.height,
+					rotation: figma.currentPage.selection[0]?.rotation,
+					type: figma.currentPage.selection[0]?.type
+				}
 			}
 		}
 		emit('EMIT_SELECTION_CHANGE_TO_UI', msg)
@@ -160,7 +170,7 @@ export default function () {
 	 * and doing some additional cleanup.
 	 */
 	function applyTransformation(): void {
-		if (!FLAG_IN_CANVAS_PREVIEW) {
+		if (!FLAG_SHOW_PREVIEW) {
 			componentizeNode(figma.currentPage.selection[0])
 			updateCanvasPreview()
 		}
@@ -216,13 +226,13 @@ export default function () {
 		const str: SelectionState = validateSelection(
 			figma.currentPage.selection
 		)
-		if (str === 'VALID' && !FLAG_IN_CANVAS_PREVIEW) {
+		if (str === 'VALID' && !FLAG_SHOW_PREVIEW) {
 			componentizeNode(figma.currentPage.selection[0])
 			updateCanvasPreview()
 		} else {
 			removeRefs()
 		}
-		FLAG_IN_CANVAS_PREVIEW = value
+		FLAG_SHOW_PREVIEW = value
 	}
 
 	/**
