@@ -87,7 +87,7 @@
 
 .item:hover {
 	z-index: 100;
-	box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
+	box-shadow: var(--local-box-shadow-hover);
 	cursor: pointer;
 	mix-blend-mode: normal !important;
 }
@@ -109,21 +109,26 @@
 }
 
 .item.isInitial.isSelected {
-	/* border: var(--local-item-border-active-primary); */
-	border: 1px solid var(--local-color-purple);
+	/* --computed-color-border is set via inline styles in ./ui.tsx */
+	border: 1px solid var(--computed-color-border);
 }
 
 .item.isInitial:hover {
 	z-index: 0 !important;
+	box-shadow: var(--local-box-shadow);
+	mix-blend-mode: multiply !important;
 }
 
-.item.isInitial .index {
-	background: #000 !important;
+.item.isInitial .indexBadge {
+	color: var(--local-color-purple);
+	/* background: var(--local-color-darkpurple) !important; */
+	background: #fff !important;
+	border: 1px solid var(--local-color-purple);
 }
 
 .item.isSelected {
-	/* border: var(--local-item-border-active-secondary); */
-	border: 1px dashed var(--local-color-purple);
+	/* --computed-color-border is set via inline styles in ./ui.tsx */
+	border: 1px dashed var(--computed-color-border);
 }
 
 .item.isSkipped {
