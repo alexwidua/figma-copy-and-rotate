@@ -6,7 +6,7 @@
 :root {
 	--local-color-white: var(--color-white);
 	--local-color-accent: var(--color-blue);
-	--local-color-purple: var(--color-purple);
+	/* --local-color-purple: var(--color-purple); */
 	--local-color-red: var(--color-red);
 	--local-color-disabled: rgb(110, 110, 110);
 
@@ -27,6 +27,11 @@
 	/* --border-radius-2: 2px; */
 	--local-border-radius-3: 3px;
 	/* --border-radius-6: 6px; */
+
+	--local-space-extra-extra-small: 6px;
+
+	--local-box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+	--local-box-shadow-subtle: rgba(149, 157, 165, 0.1) 0px 8px 24px;
 }
 
 body {
