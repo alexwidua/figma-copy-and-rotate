@@ -58,6 +58,7 @@ const Plugin = ({ selection, ui }: any) => {
 	const [skipSpecific, setSkipSpecific] = useState<string>('')
 	const [skipEvery, setSkipEvery] = useState<string>('')
 	const [alignRadially, setAlignRadially] = useState<boolean>(true)
+	const [inCanvasPreview, setInCanvasPreview] = useState<boolean>(true)
 	const [sweepAngle, setSweepAngle] = useState<number>(360)
 
 	// Internal states
@@ -158,6 +159,17 @@ const Plugin = ({ selection, ui }: any) => {
 			alignRadially: e.currentTarget.checked
 		}
 		emit('EMIT_INPUT_TO_PLUGIN', data)
+	}
+
+	function handleInCanvasPreview(
+		e: h.JSX.TargetedEvent<HTMLInputElement>
+	): void {
+		const value = e.currentTarget.checked
+		setInCanvasPreview(value)
+		// const data: Partial<TransformOptions> = {
+		// 	alignRadially: e.currentTarget.checked
+		// }
+		emit('EMIT_PREVIEW_CHANGE_TO_PLUGIN', value)
 	}
 
 	function handleInstanceClick(index: number): void {
@@ -374,6 +386,11 @@ const Plugin = ({ selection, ui }: any) => {
 				<VerticalSpace space="medium" />
 				<Checkbox onChange={handleAlignRadially} value={alignRadially}>
 					<Text>Align instances radially</Text>
+				</Checkbox>
+				<Checkbox
+					onChange={handleInCanvasPreview}
+					value={inCanvasPreview}>
+					<Text>Live preview</Text>
 				</Checkbox>
 				<VerticalSpace space="medium" />
 				<Button

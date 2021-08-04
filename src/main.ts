@@ -22,26 +22,10 @@ export default function () {
 		ui
 	}
 
-	/**
-	 * Plugin settings
-	 */
-	const validNodeTypes: Array<NodeType> = [
-		// 'BOOLEAN_OPERATION',
-		'COMPONENT',
-		'ELLIPSE',
-		// 'FRAME',
-		'GROUP',
-		// 'INSTANCE',
-		// 'LINE',
-		// 'POLYGON',
-		'RECTANGLE'
-		// 'STAR',
-		// 'TEXT',
-		// 'VECTOR'
-	]
-
 	// Internal plugin state
 	let FLAG_TRANSFORM_SUCCESS = false
+	let FLAG_IN_CANVAS_PREVIEW = true
+
 	let state: TransformOptions = {
 		numItems: 8,
 		radius: 50,
@@ -69,19 +53,24 @@ export default function () {
 	 */
 	function handleSelectionChange(): void {
 		const str: SelectionState = validateSelection(
-			figma.currentPage.selection,
-			validNodeTypes
+			figma.currentPage.selection
 		)
 
-		if (str.match(/^(EMPTY|INVALID|IS_INSTANCE|HAS_COMPONENT|MULTIPLE)$/)) {
-			removeRefs()
-		} else if (selectionRef && groupRef && componentRef) {
-			removeRefs()
-			componentizeNode(figma.currentPage.selection[0])
-			updateCanvasPreview()
-		} else {
-			componentizeNode(figma.currentPage.selection[0])
-			updateCanvasPreview()
+		if (FLAG_IN_CANVAS_PREVIEW) {
+			if (
+				str.match(
+					/^(EMPTY|INVALID|IS_INSTANCE|HAS_COMPONENT|MULTIPLE)$/
+				)
+			) {
+				removeRefs()
+			} else if (selectionRef && groupRef && componentRef) {
+				removeRefs()
+				componentizeNode(figma.currentPage.selection[0])
+				updateCanvasPreview()
+			} else {
+				componentizeNode(figma.currentPage.selection[0])
+				updateCanvasPreview()
+			}
 		}
 
 		const msg: SelectionMessage = {
@@ -171,11 +160,17 @@ export default function () {
 	 * and doing some additional cleanup.
 	 */
 	function applyTransformation(): void {
+		if (!FLAG_IN_CANVAS_PREVIEW) {
+			componentizeNode(figma.currentPage.selection[0])
+			updateCanvasPreview()
+		}
+
 		if (!selectionRef || !groupRef || !componentRef) {
 			return console.error(
 				`Couldn't apply transformation. References are missing`
 			)
 		}
+
 		// Replace the first instance and append the component to the group
 		const getFirstChild: SceneNode = groupRef.children[0]
 		componentRef.rotation = getFirstChild.rotation
@@ -214,6 +209,23 @@ export default function () {
 	}
 
 	/**
+	 * Enable or disable the in canvas live preview.
+	 * @param value - Checkbox state emitted from the UI window
+	 */
+	function handlePreviewChange(value: boolean): void {
+		const str: SelectionState = validateSelection(
+			figma.currentPage.selection
+		)
+		if (str === 'VALID' && !FLAG_IN_CANVAS_PREVIEW) {
+			componentizeNode(figma.currentPage.selection[0])
+			updateCanvasPreview()
+		} else {
+			removeRefs()
+		}
+		FLAG_IN_CANVAS_PREVIEW = value
+	}
+
+	/**
 	 * Utility function that toggles the group refs visual properties.
 	 * @param isPreview
 	 */
@@ -248,6 +260,7 @@ export default function () {
 	// Listeners
 	on('APPLY_TRANSFORMATION', applyTransformation)
 	on('EMIT_INPUT_TO_PLUGIN', handleUpdateFromUI)
+	on('EMIT_PREVIEW_CHANGE_TO_PLUGIN', handlePreviewChange)
 	figma.on('selectionchange', handleSelectionChange)
 	figma.on('close', handleClose)
 
