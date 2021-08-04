@@ -55,8 +55,8 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 }
 
 /**
- * Recursively search for child nodes and constraint them to center
- * to allow for smooth scaling after transformation has been applied.
+ * Recursively search for child nodes and constraint them to CENTER
+ * to preserve the rotation when scaling after the transformation has been applied.
  * @param node
  */
 function constrainChildrenToCenter(node: ChildrenMixin): void {

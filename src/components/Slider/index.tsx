@@ -1,5 +1,11 @@
 /**
- * @file Radial slider component that controls the sweep of the radial pattern.
+ * @file Radial slider that allows the user to change the sweep angle of the
+ * current rotation.
+ * Contrary to what you might expect, the slider does not rotate 360 degrees.
+ * The reason is that technically the circle is not rotated 360 degrees,
+ * but 360 - (360/ <number of items) degrees.
+ * For this reason, we subtract an offset from the slider, so that the
+ * slider position and sweep angle match the user expectation.
  */
 
 import { h } from 'preact'
@@ -7,10 +13,7 @@ import { useState, useRef, useEffect, useMemo } from 'preact/hooks'
 import style from './style.css'
 
 const Slider = ({ onSweepChange, onSweep, numItems }: SliderProp) => {
-	// We don't want our radial slider to rotate 360 degs because the generated
-	// circle doesn't span from 0..360 degree, but from 0..(360-(360-numItems)).
-	// Because of that, we want to reduce the degree of freedom so the sweep doesn't
-	// yield unexpected results
+	// We subtract the aforementioned offset to limit the rotation of the slider
 	const offset: number = 360 / numItems
 
 	const slider = useRef<HTMLDivElement>(null)
