@@ -16,11 +16,9 @@ import {
 	Checkbox
 } from '@create-figma-plugin/ui'
 import { Preview, Slider } from './components'
-import { debounce } from './utils/ui'
+import { debounce } from './utils/debounce'
 import './vars.css'
 import style from './style.css'
-
-type SelectionStateMap = { [type in SelectionState]: string }
 
 const Plugin = ({ selection, ui }: any) => {
 	/**
@@ -115,11 +113,12 @@ const Plugin = ({ selection, ui }: any) => {
 	): void {
 		const value = e.currentTarget.value
 		const map = e.currentTarget.value.split(',').map(Number)
-		if (map.length > parseInt(numItems) - 1) {
+		if (map.length > parseInt(numItems) - 2) {
 			emit('EMIT_INPUT_TO_PLUGIN', {
 				skipSelect: 'SPECIFIC',
 				skipSpecific: []
 			})
+			emitError('CANT_SKIP_ALL')
 			return setSkipSpecific('')
 		}
 		setSkipSpecific(value)
@@ -172,17 +171,18 @@ const Plugin = ({ selection, ui }: any) => {
 	function handleInstanceClick(index: number): void {
 		// index 0 is the original node and not skippable
 		if (index === 0) {
-			return
+			return emitError('CANT_SKIP_FIRST_INDEX')
 		}
 		let map: Array<number> = []
 		if (skipSpecific) {
 			map = skipSpecific.split(',').map(Number)
 		}
-		if (map.length > parseInt(numItems) - 2) {
+		if (map.length > parseInt(numItems) - 3) {
 			emit('EMIT_INPUT_TO_PLUGIN', {
 				skipSelect: 'SPECIFIC',
 				skipSpecific: []
 			})
+			emitError('CANT_SKIP_ALL')
 			return setSkipSpecific('')
 		}
 		const isAlreadySelected = map.indexOf(index + 1)
@@ -236,10 +236,6 @@ const Plugin = ({ selection, ui }: any) => {
 	// Debounce events
 	const debounceWaitTime = 200
 
-	const emitInputChange = (data: any) => {
-		emit('EMIT_INPUT_TO_PLUGIN', data)
-	}
-
 	const debounceNumItemsChange = useCallback(
 		debounce((data) => emitInputChange(data), debounceWaitTime),
 		[]
@@ -254,6 +250,15 @@ const Plugin = ({ selection, ui }: any) => {
 		debounce((data) => emitInputChange(data), debounceWaitTime),
 		[]
 	)
+
+	// Emit events
+	function emitInputChange(data: any) {
+		emit('EMIT_INPUT_TO_PLUGIN', data)
+	}
+
+	function emitError(error: PluginError) {
+		emit('UI_ERROR', error)
+	}
 
 	// Input validators
 	function validateMinValue(
@@ -288,8 +293,8 @@ const Plugin = ({ selection, ui }: any) => {
 		<div
 			style={
 				inCanvasPreview
-					? '--local-color-purple: #7b61ff'
-					: '--local-color-purple: #18a0fb'
+					? '--computed-color-border: #7b61ff'
+					: '--computed-color-border: #18a0fb'
 			}>
 			<Preview
 				uiWidth={ui.width}
@@ -320,7 +325,7 @@ const Plugin = ({ selection, ui }: any) => {
 					<Checkbox
 						onChange={handleInCanvasPreview}
 						value={inCanvasPreview}>
-						<Text>Live preview</Text>
+						<Text>Preview on canvas</Text>
 					</Checkbox>
 				</div>
 			</div>

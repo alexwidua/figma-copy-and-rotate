@@ -37,6 +37,11 @@ type SelectionProperties = {
 }
 
 /**
+ * Displays button text that corresponds to the current SelecionState
+ */
+type SelectionStateMap = { [type in SelectionState]: string }
+
+/**
  * Options for the UI's skip dropdown menu.
  * 'SPECIFIC' refers to 'Skip (specific) instances', 'EVERY' to 'Skip every (Nth)'
  */
@@ -81,3 +86,12 @@ interface SliderProp {
 	readonly onSweep: Function
 	readonly numItems: number
 }
+
+/**
+ * Plugin error message that is displayed to the user.
+ */
+type PluginError = 'CANT_SKIP_FIRST_INDEX' | 'CANT_SKIP_ALL'
+/**
+ * Maps the error message to a more human-readable text message.
+ */
+type PluginErrorMap = { [type in PluginError]: string }

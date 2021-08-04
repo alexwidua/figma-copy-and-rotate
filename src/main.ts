@@ -13,6 +13,7 @@ import {
 import { instantiateAndRotate } from './utils/transform'
 import { createComponentInPlace } from './utils/node'
 import { validateSelection } from './utils/selection'
+import { handleErrorNotification } from './utils/error'
 
 export default function () {
 	/**
@@ -104,7 +105,7 @@ export default function () {
 					width: componentRef?.width,
 					height: componentRef?.height,
 					rotation: componentRef?.rotation,
-					type: componentRef?.type
+					type: figma.currentPage.selection[0]?.type
 				}
 			}
 		} else {
@@ -303,6 +304,7 @@ export default function () {
 	on('APPLY_TRANSFORMATION', applyTransformation)
 	on('EMIT_INPUT_TO_PLUGIN', handleUpdateFromUI)
 	on('EMIT_PREVIEW_CHANGE_TO_PLUGIN', handlePreviewChange)
+	on('UI_ERROR', handleErrorNotification)
 	figma.on('selectionchange', handleSelectionChange)
 	figma.on('close', handleClose)
 
