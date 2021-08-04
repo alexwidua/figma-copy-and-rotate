@@ -2,6 +2,8 @@
  * @file Utility functions that concern page selection queries.
  */
 
+import { isWithinInstanceNode } from '@create-figma-plugin/utilities'
+
 /**
  * Checks if current selection is empty, multiple, valid or updateable.
  * @param selection - Current page selection
@@ -31,7 +33,7 @@ export function validateSelection(
 		}
 		const node: SceneNode = selection[0]
 		if (validNodeTypes.indexOf(node.type) >= 0) {
-			if (node.parent?.type === 'COMPONENT') {
+			if (isWithinInstanceNode(node)) {
 				return 'IS_INSTANCE'
 			} else if (node.type === 'GROUP' && hasComponentChild(node)) {
 				return 'HAS_COMPONENT'
