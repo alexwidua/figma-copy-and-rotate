@@ -11,18 +11,18 @@ export function validateSelection(
 	selection: ReadonlyArray<SceneNode>
 ): SelectionState {
 	const validNodeTypes: Array<NodeType> = [
-		// 'BOOLEAN_OPERATION',
+		'BOOLEAN_OPERATION',
 		'COMPONENT',
 		'ELLIPSE',
-		// 'FRAME',
+		'FRAME',
 		'GROUP',
-		// 'INSTANCE',
-		// 'LINE',
-		// 'POLYGON',
-		'RECTANGLE'
-		// 'STAR',
-		// 'TEXT',
-		// 'VECTOR'
+		'INSTANCE',
+		'LINE',
+		'POLYGON',
+		'RECTANGLE',
+		'STAR',
+		'TEXT',
+		'VECTOR'
 	]
 
 	if (selection.length) {
