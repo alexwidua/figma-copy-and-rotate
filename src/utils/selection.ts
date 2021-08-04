@@ -5,19 +5,32 @@
 /**
  * Checks if current selection is empty, multiple, valid or updateable.
  * @param selection - Current page selection
- * @param validNodes - Array containing all valid node types
  * @returns {SelectionType}
  */
 export function validateSelection(
-	selection: ReadonlyArray<SceneNode>,
-	validNodes: Array<String>
+	selection: ReadonlyArray<SceneNode>
 ): SelectionState {
+	const validNodeTypes: Array<NodeType> = [
+		// 'BOOLEAN_OPERATION',
+		'COMPONENT',
+		'ELLIPSE',
+		// 'FRAME',
+		'GROUP',
+		// 'INSTANCE',
+		// 'LINE',
+		// 'POLYGON',
+		'RECTANGLE'
+		// 'STAR',
+		// 'TEXT',
+		// 'VECTOR'
+	]
+
 	if (selection.length) {
 		if (selection.length > 1) {
 			return 'MULTIPLE'
 		}
 		const node: SceneNode = selection[0]
-		if (validNodes.indexOf(node.type) >= 0) {
+		if (validNodeTypes.indexOf(node.type) >= 0) {
 			if (node.parent?.type === 'COMPONENT') {
 				return 'IS_INSTANCE'
 			} else if (node.type === 'GROUP' && hasComponentChild(node)) {
