@@ -36,7 +36,7 @@
 .radiusBadge {
 	position: absolute;
 	top: 50%;
-	left: 8px;
+	left: var(--space-extra-small);
 	padding: 2px 4px;
 	color: var(--local-color-white);
 	background: var(--color-red);
@@ -46,17 +46,17 @@
 
 .originIcon {
 	position: absolute;
-	bottom: -3px;
-	left: -3px;
-	width: 6px;
-	height: 6px;
+	bottom: calc(var(--local-space-extra-extra-small) / -2);
+	left: calc(var(--local-space-extra-extra-small) / -2);
+	width: var(--local-space-extra-extra-small);
+	height: var(--local-space-extra-extra-small);
 }
 
 .originIcon::before,
 .originIcon::after {
 	position: absolute;
 	top: 0;
-	left: 3px;
+	left: calc(var(--local-space-extra-extra-small) / 2);
 	display: block;
 	width: 1px;
 	height: 100%;
@@ -81,7 +81,7 @@
 	align-items: center;
 	justify-content: center;
 	background: var(--local-color-item-fill);
-	box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+	box-shadow: var(--local-box-shadow);
 	transition: box-shadow 0.2s, border-radius 0.2s;
 }
 
@@ -100,12 +100,17 @@
 	mix-blend-mode: multiply;
 }
 
+.container:hover .indexBadge {
+	opacity: 1;
+}
+
 .item.isInitial.isRadiusHighlight {
 	border: var(--local-item-border-radius) !important;
 }
 
 .item.isInitial.isSelected {
-	border: var(--local-item-border-active-primary);
+	/* border: var(--local-item-border-active-primary); */
+	border: 1px solid var(--local-color-purple);
 }
 
 .item.isInitial:hover {
@@ -117,7 +122,8 @@
 }
 
 .item.isSelected {
-	border: var(--local-item-border-active-secondary);
+	/* border: var(--local-item-border-active-secondary); */
+	border: 1px dashed var(--local-color-purple);
 }
 
 .item.isSkipped {
@@ -139,10 +145,10 @@
 
 .indexBadge {
 	display: block;
-	width: 16px;
-	min-width: 16px;
-	height: 16px;
-	min-height: 16px;
+	width: var(--space-medium);
+	min-width: var(--space-medium);
+	height: var(--space-medium);
+	min-height: var(--space-medium);
 	color: var(--local-color-white);
 	text-align: center;
 	background: var(--local-color-purple);
@@ -154,11 +160,3 @@
 .indexBadge.isSkipped {
 	background: var(--local-color-item-inactive);
 }
-
-/* .indexBadge.isVisible {
-	opacity: 1 !important;
-} */
-/* 
-.container:hover .index {
-	opacity: 1 !important;
-} */

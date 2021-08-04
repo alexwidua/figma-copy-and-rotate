@@ -41,7 +41,7 @@
 	top: 0;
 	left: 50%;
 	z-index: 9999;
-	width: 24px;
+	width: var(--space-extra-large);
 	height: 50%;
 	transform-origin: left bottom;
 	cursor: pointer;
@@ -53,8 +53,8 @@
 	top: 0px;
 	left: 50%;
 	display: block;
-	width: 8px;
-	height: 8px;
+	width: var(--space-extra-small);
+	height: var(--space-extra-small);
 	background: var(--local-color-white);
 	border: 1px solid var(--local-color-accent);
 	border-radius: 100%;
@@ -74,7 +74,7 @@
 	left: calc(50% - 1px);
 	width: 2px;
 	height: 50%;
-	border-left: 1px dashed var(--local-color-container-assistive);
+	border-left: 0.1px dashed var(--local-color-container-assistive);
 	transform-origin: left bottom;
 	cursor: pointer;
 	pointer-events: none;
