@@ -86,7 +86,7 @@ const Plugin = ({ selection, ui }: any) => {
 			const data: Partial<TransformOptions> = {
 				numItems: parseInt(e.currentTarget.value)
 			}
-			emit('EMIT_INPUT_TO_PLUGIN', data)
+			debounceNumItemsChange(data)
 		}
 	}
 
@@ -166,9 +166,6 @@ const Plugin = ({ selection, ui }: any) => {
 	): void {
 		const value = e.currentTarget.checked
 		setInCanvasPreview(value)
-		// const data: Partial<TransformOptions> = {
-		// 	alignRadially: e.currentTarget.checked
-		// }
 		emit('EMIT_PREVIEW_CHANGE_TO_PLUGIN', value)
 	}
 
@@ -237,17 +234,24 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	// Debounce events
+	const debounceWaitTime = 200
+
 	const emitInputChange = (data: any) => {
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
-	const debounceSweepChange = useCallback(
-		debounce((data) => emitInputChange(data), 200),
+	const debounceNumItemsChange = useCallback(
+		debounce((data) => emitInputChange(data), debounceWaitTime),
 		[]
 	)
 
 	const debounceRadiusChange = useCallback(
-		debounce((data) => emitInputChange(data), 200),
+		debounce((data) => emitInputChange(data), debounceWaitTime),
+		[]
+	)
+
+	const debounceSweepChange = useCallback(
+		debounce((data) => emitInputChange(data), debounceWaitTime),
 		[]
 	)
 
