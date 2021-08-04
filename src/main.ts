@@ -2,7 +2,14 @@
  * @file The plugin's main file.
  */
 
-import { on, emit, showUI } from '@create-figma-plugin/utilities'
+import {
+	on,
+	emit,
+	showUI,
+	insertAfterNode,
+	insertBeforeNode,
+	collapseLayer
+} from '@create-figma-plugin/utilities'
 import { instantiateAndRotate } from './utils/transform'
 import { createComponentInPlace } from './utils/node'
 import { validateSelection } from './utils/selection'
@@ -36,20 +43,15 @@ export default function () {
 		sweepAngle: 360
 	}
 
-	/**
-	 * Node references which are the heart of the in canvas preview.
-	 * {selectionRef} is a temporary carbon copy of the selected node to
-	 * revert everything if the user deselects/closes the plugin.
-	 * {groupRef} holds the actual circle with transformed instances
-	 * {componentRef} holds the componentized original selected node
-	 */
+	// Carbon copy of the selected node, is used to restore node on deselect or plugin close
 	let selectionRef: SceneNode | undefined
+	// Holds the group of instances used for the in-canvas/live preview
 	let groupRef: GroupNode | undefined
+	// Holds the componentized selected node, is discarded on deselect/plugin close
 	let componentRef: ComponentNode | undefined
 
 	/**
-	 * Creates in-canvas preview and updates the UI with
-	 * the selection's properties.
+	 * Handles selection changes and instructs circle (re)-renders if preview is enabled.
 	 */
 	function handleSelectionChange(): void {
 		let msg: SelectionMessage
@@ -58,16 +60,40 @@ export default function () {
 		)
 
 		if (FLAG_SHOW_PREVIEW) {
+			// Check if selection is invalid or empty, this also handles the de-selection
 			if (
 				str.match(
 					/^(EMPTY|INVALID|IS_INSTANCE|HAS_COMPONENT|MULTIPLE)$/
 				)
 			) {
 				removeRefs()
-			} else if (selectionRef && groupRef && componentRef) {
+			}
+			// Prevent user from selecting the preview group via the layer list,
+			// which would cause a chain of selectionchange events.
+			// By re-inserting the group, we force a selection of componentref.
+			// Fells like a dirty hack, so TODO: find more elegant solution.
+			else if (
+				selectionRef &&
+				groupRef &&
+				figma.currentPage.selection[0].id === groupRef.id
+			) {
+				insertAfterNode(selectionRef, groupRef)
+			}
+			// Handle if user clicks on the preview component via layer list with same hacky solution
+			else if (
+				selectionRef &&
+				componentRef &&
+				figma.currentPage.selection[0].id === componentRef.id
+			) {
+				insertBeforeNode(componentRef, selectionRef)
+			}
+			// Handle if user selects a different node without clearing the selection
+			else if (selectionRef && groupRef && componentRef) {
 				removeRefs()
-				componentizeNode(figma.currentPage.selection[0])
-				updateCanvasPreview()
+				if (figma.currentPage.selection.length) {
+					componentizeNode(figma.currentPage.selection[0])
+					updateCanvasPreview()
+				}
 			} else {
 				componentizeNode(figma.currentPage.selection[0])
 				updateCanvasPreview()
@@ -112,6 +138,7 @@ export default function () {
 			return figma.notify('Please select nodes via the canvas.')
 		}
 		selectionRef = selection.clone()
+		insertAfterNode(selectionRef, selection)
 		selectionRef.visible = false
 
 		if (selection.type === 'COMPONENT') {
@@ -120,14 +147,17 @@ export default function () {
 			componentRef = createComponentInPlace(selection)
 		}
 		componentRef.name = 'Preview'
+		insertAfterNode(componentRef, selectionRef)
 	}
 
 	/**
 	 * Updates the in canvas preview after selection or UI input changes.
 	 */
 	function updateCanvasPreview(): void {
-		if (!componentRef) {
-			return
+		if (!selectionRef || !componentRef) {
+			return console.error(
+				`Couldn't update transformation. References are missing`
+			)
 		}
 		const circle: Array<InstanceNode> = instantiateAndRotate(
 			componentRef,
@@ -138,6 +168,8 @@ export default function () {
 		)
 		const parent = componentRef.parent || figma.currentPage
 		groupRef = figma.group(circle, parent)
+		insertAfterNode(groupRef, selectionRef)
+		collapseLayer(groupRef)
 
 		// Account for offset caused by grouping
 		const alignX: number = componentRef.x - circle[0].x
