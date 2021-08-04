@@ -67,8 +67,8 @@ interface PreviewProps extends TransformOptions {
 	readonly selectionType: NodeType
 	readonly alignRadially: boolean
 	readonly isSweeping: boolean
-	readonly showRadiusBadge: boolean
-	readonly showNumBadge: boolean
+	readonly showRadiusHelper: boolean
+	readonly showNumBadge: number
 	readonly onInstanceClick: Function
 	readonly children: import('preact').ComponentChildren
 }

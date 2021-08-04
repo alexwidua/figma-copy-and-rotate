@@ -1,5 +1,8 @@
 /**
- * @file Individual item that gets mapped radially. Expects to be a child of ./Preview.
+ * @file The item component is part of the UI preview and represents a node
+ * that gets mapped radially. Each item holds different visual states, such as
+ * being highlighted, being skipped or being heighlighted when the radius is changed.
+ * Must be a child of ./Preview.
  */
 
 import { h } from 'preact'
@@ -29,7 +32,7 @@ const Item = ({
 	skipSpecific = [-1],
 	skipEvery = 0,
 	alignRadially,
-	showRadiusBadge,
+	showRadiusHelper,
 	showNumBadge,
 	elevateClick
 }: ItemProps) => {
@@ -45,26 +48,14 @@ const Item = ({
 		height: itemHeight,
 		top: y,
 		left: x,
-		border: showRadiusBadge
-			? '0.1px solid var(--color-red)'
-			: isValidSelection
-			? isSkipped
-				? 'var(--local-item-border-deselected)'
-				: 'var(--local-item-border-active)'
-			: 'var(--local-item-border-inactive)',
 		transform: `rotate(${
 			alignRadially ? angle + (rotation + 90) * -1 : rotation + -90
 		}deg)`,
-		background: isSkipped ? 'none' : 'var(--local-color-item-fill)',
 		borderRadius:
 			selectionType === 'ELLIPSE' ? '100%' : 'var(--border-radius-2)'
 	}
 
-	const inlineIndex: h.JSX.CSSProperties = {
-		opacity: showNumBadge ? 1 : 0,
-		background: isSkipped
-			? 'var(--local-color-item-inactive)'
-			: 'var(--local-color-accent)',
+	const inlineIndexBadge: h.JSX.CSSProperties = {
 		transform: `rotate(${
 			alignRadially ? angle * -1 + rotation + 90 : 90
 		}deg)`
@@ -73,9 +64,19 @@ const Item = ({
 	return (
 		<div
 			onClick={() => elevateClick()}
-			class={`${style.item} ${index === 0 ? style.og : ''}`}
+			class={`${style.item} 
+			${index === 0 && style.isInitial}
+			${isValidSelection && style.isSelected}
+			${isSkipped && style.isSkipped}
+			${showRadiusHelper && style.isRadiusHighlight}
+			${showNumBadge! > 0 && style.showIndex}
+			${showNumBadge! > 1 && style.showXray}
+			
+			`}
 			style={inlineItem}>
-			<span class={style.index} style={inlineIndex}>
+			<span
+				class={`${style.indexBadge} ${isSkipped && style.isSkipped} $`}
+				style={inlineIndexBadge}>
 				{index + 1}
 			</span>
 		</div>

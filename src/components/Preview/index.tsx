@@ -1,5 +1,8 @@
 /**
- * @file Preview component that enables the user to view and modify the radial pattern.
+ * @file UI preview that previews the current rotation. The preview is interactable
+ * and allows the user to skip instances by clicking on the individual items.
+ * The preview is naïve in that sense that is just represents the boundaries of a
+ * node, ex. a triangle node will still be displayed as a square.
  */
 
 import { h } from 'preact'
@@ -22,7 +25,7 @@ const Preview = ({
 	alignRadially,
 	isSweeping,
 	sweepAngle,
-	showRadiusBadge,
+	showRadiusHelper,
 	showNumBadge,
 	onInstanceClick,
 	children
@@ -33,7 +36,6 @@ const Preview = ({
 	const width: LayoutMixin['width'] = selectionWidth
 	const height: LayoutMixin['height'] = selectionHeight
 	const isWiderOrSquare: boolean = width >= height
-	// const radius: number = parseInt(itemRadius)
 	const diameter: number = radius * 2
 
 	// Scale items down if item size + radius exceed preview container bounds
@@ -51,12 +53,11 @@ const Preview = ({
 	 * Map items radially
 	 */
 	const circle = Array.from({ length }, (e, i) => {
-		// See ./core/transform.ts
 		// We subtract 1 from numItems to account for the sweep offset, see ./Slider
 		const deg: number = baseDeg + (sweepAngle / (numItems - 1)) * i
 		const rad: number = deg * (Math.PI / 180)
 
-		// Normalize shape if item is oblong
+		// Normalize shape if item is oblongular
 		const diff: number = Math.abs(propWidth - propHeight)
 		const normalizeShape: number =
 			propWidth >= propHeight
@@ -97,7 +98,7 @@ const Preview = ({
 				skipSpecific={skipSpecific}
 				skipEvery={skipEvery}
 				alignRadially={alignRadially}
-				showRadiusBadge={showRadiusBadge}
+				showRadiusHelper={showRadiusHelper}
 				showNumBadge={showNumBadge}
 				elevateClick={() => onInstanceClick(i)}
 			/>
@@ -121,7 +122,7 @@ const Preview = ({
 	}
 
 	const inlineRadius: h.JSX.CSSProperties = {
-		opacity: showRadiusBadge ? 1 : 0
+		opacity: showRadiusHelper ? 1 : 0
 	}
 
 	const inlineDistance: h.JSX.CSSProperties = {
@@ -133,12 +134,11 @@ const Preview = ({
 		<div class={style.wrapper} style={inlineWrapper}>
 			{children}
 			<div class={style.container} style={inlineContainer}>
-				<div class={style.circumference} style={inlineCircumference} />
 				{circle}
-				<div class={style.radius} style={inlineRadius}>
-					<div class={style.distance} style={inlineDistance} />
-					<span class={style.badge}>{radius}</span>
-					<span class={style.origin} />
+				<div class={style.radiusContainer} style={inlineRadius}>
+					<div class={style.distanceLine} style={inlineDistance} />
+					<span class={style.radiusBadge}>{radius}</span>
+					<span class={style.originIcon} />
 				</div>
 			</div>
 		</div>

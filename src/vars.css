@@ -6,6 +6,8 @@
 :root {
 	--local-color-white: var(--color-white);
 	--local-color-accent: var(--color-blue);
+	--local-color-purple: var(--color-purple);
+	--local-color-red: var(--color-red);
 	--local-color-disabled: rgb(110, 110, 110);
 
 	--local-color-container-bg: #f3f3f3;
@@ -15,10 +17,12 @@
 	--local-color-item-border: var(--local-color-white);
 	--local-color-item-inactive: #c7c7c7;
 
-	--local-item-border-active: 1px solid var(--local-color-accent);
+	--local-item-border-active-primary: 1px solid var(--local-color-purple);
+	--local-item-border-active-secondary: 1px dashed var(--local-color-purple);
 	--local-item-border-inactive: 1px solid var(--local-color-white);
 	--local-item-border-deselected: 1px dashed
 		var(--local-color-container-assistive);
+	--local-item-border-radius: 0.1px solid var(--color-red);
 
 	/* --border-radius-2: 2px; */
 	--local-border-radius-3: 3px;

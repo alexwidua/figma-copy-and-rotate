@@ -65,8 +65,8 @@ const Plugin = ({ selection, ui }: any) => {
 		useState<SelectionProperties>(initSelection)
 	const [selectionState, setSelectionState] =
 		useState<SelectionState>('EMPTY')
-	const [showRadiusBadge, setShowRadiusBadge] = useState<boolean>(false)
-	const [showNumBadge, setShowNumBadge] = useState<boolean>(false)
+	const [showRadiusHelper, setshowRadiusHelper] = useState<boolean>(false)
+	const [showNumBadge, setShowNumBadge] = useState<number>(0)
 	const [isSweeping, setIsSweeping] = useState<boolean>(false)
 
 	useEffect(() => {
@@ -98,7 +98,7 @@ const Plugin = ({ selection, ui }: any) => {
 			}
 			debounceRadiusChange(data)
 		}
-		setShowRadiusBadge(true)
+		setshowRadiusHelper(true)
 	}
 
 	function handleSkipMenu(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
@@ -285,7 +285,7 @@ const Plugin = ({ selection, ui }: any) => {
 				alignRadially={alignRadially}
 				isSweeping={isSweeping}
 				sweepAngle={sweepAngle}
-				showRadiusBadge={showRadiusBadge}
+				showRadiusHelper={showRadiusHelper}
 				showNumBadge={showNumBadge}
 				onInstanceClick={handleInstanceClick}>
 				<Slider
@@ -303,16 +303,16 @@ const Plugin = ({ selection, ui }: any) => {
 						maximum={9999}
 						value={numItems}
 						validateOnBlur={(e) => validateMinValue(e, 2)}
-						onFocusCapture={() => setShowNumBadge(true)}
-						onBlurCapture={() => setShowNumBadge(false)}
+						onFocusCapture={() => setShowNumBadge(1)}
+						onBlurCapture={() => setShowNumBadge(0)}
 					/>
 					<TextboxNumeric
 						onInput={handleRadiusInput}
 						icon={'R'}
 						value={radius}
 						validateOnBlur={(e) => validateMinValue(e, 0)}
-						onFocusCapture={() => setShowRadiusBadge(true)}
-						onBlurCapture={() => setShowRadiusBadge(false)}
+						onFocusCapture={() => setshowRadiusHelper(true)}
+						onBlurCapture={() => setshowRadiusHelper(false)}
 					/>
 				</Columns>
 				<VerticalSpace space="medium" />
@@ -333,8 +333,8 @@ const Plugin = ({ selection, ui }: any) => {
 								onInput={handleSkipSpecificInput}
 								validateOnBlur={validateSkipSpecific}
 								placeholder={'ex. 2,4,8'}
-								onFocusCapture={() => setShowNumBadge(true)}
-								onBlurCapture={() => setShowNumBadge(false)}
+								onFocusCapture={() => setShowNumBadge(2)}
+								onBlurCapture={() => setShowNumBadge(0)}
 								style={{
 									paddingRight:
 										'calc(var(--local-icon-size) * 2)'
@@ -355,8 +355,8 @@ const Plugin = ({ selection, ui }: any) => {
 								onInput={handleSkipEveryInput}
 								validateOnBlur={validateSkipEvery}
 								placeholder={'Skip every <n>th item'}
-								onFocusCapture={() => setShowNumBadge(true)}
-								onBlurCapture={() => setShowNumBadge(false)}
+								onFocusCapture={() => setShowNumBadge(2)}
+								onBlurCapture={() => setShowNumBadge(0)}
 								style={{
 									paddingRight:
 										'calc(var(--local-icon-size) * 2)'
