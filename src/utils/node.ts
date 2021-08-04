@@ -50,7 +50,7 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
 		}
 	}
 
-	constrainChildrenToCenter(node)
+	constrainChildren(node)
 	return node
 }
 
@@ -59,12 +59,12 @@ export function createComponentInPlace(selection: SceneNode): ComponentNode {
  * to preserve the rotation when scaling after the transformation has been applied.
  * @param node
  */
-function constrainChildrenToCenter(node: ChildrenMixin): void {
+function constrainChildren(node: ChildrenMixin): void {
 	node.children.forEach((e) => {
 		if (e.type === 'GROUP') {
-			constrainChildrenToCenter(e)
+			constrainChildren(e)
 		} else if ('constraints' in e) {
-			e.constraints = { horizontal: 'CENTER', vertical: 'CENTER' }
+			e.constraints = { horizontal: 'SCALE', vertical: 'SCALE' }
 		}
 	})
 }
