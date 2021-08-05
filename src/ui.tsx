@@ -1,4 +1,4 @@
-import { h } from 'preact'
+import { h, JSX } from 'preact'
 import { useState, useEffect, useCallback } from 'preact/hooks'
 import { on, emit } from '@create-figma-plugin/utilities'
 import {
@@ -30,11 +30,11 @@ const Plugin = ({ selection, ui }: any) => {
 	]
 	const buttonMap: SelectionStateMap = {
 		EMPTY: 'No element selected',
-		INVALID: 'Selected type not supported',
+		INVALID: 'Selected element type not supported',
 		IS_INSTANCE: `Can't rotate instances`,
-		HAS_COMPONENT: `Can't rotate group containing component`,
-		VALID: 'Apply rotation',
-		MULTIPLE: 'Group multiple elements before rotating'
+		HAS_COMPONENT: `Can't rotate groups containing components`,
+		MULTIPLE: 'Group multiple elements before rotation',
+		VALID: 'Apply rotation'
 	}
 	const initSelection: SelectionProperties = {
 		height: selection.height,
@@ -75,9 +75,8 @@ const Plugin = ({ selection, ui }: any) => {
 	/**
 	 * Input handlers
 	 */
-	function handleNumItemsInput(
-		e: h.JSX.TargetedEvent<HTMLInputElement>
-	): void {
+
+	function handleNumItemsInput(e: JSX.TargetedEvent<HTMLInputElement>): void {
 		const value = e.currentTarget.value
 		if (parseInt(value) > 1 && parseFloat(value) % 1 == 0) {
 			setNumItems(e.currentTarget.value)
@@ -88,7 +87,7 @@ const Plugin = ({ selection, ui }: any) => {
 		}
 	}
 
-	function handleRadiusInput(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
+	function handleRadiusInput(e: JSX.TargetedEvent<HTMLInputElement>): void {
 		const value = e.currentTarget.value
 		if (parseFloat(value) >= 0) {
 			setRadius(e.currentTarget.value)
@@ -100,7 +99,7 @@ const Plugin = ({ selection, ui }: any) => {
 		setshowRadiusHelper(true)
 	}
 
-	function handleSkipMenu(e: h.JSX.TargetedEvent<HTMLInputElement>): void {
+	function handleSkipMenu(e: JSX.TargetedEvent<HTMLInputElement>): void {
 		setSkipSelect(e.currentTarget.value as SkipType)
 		const data: Partial<TransformOptions> = {
 			skipSelect: e.currentTarget.value as SkipType
@@ -109,7 +108,7 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	function handleSkipSpecificInput(
-		e: h.JSX.TargetedEvent<HTMLInputElement>
+		e: JSX.TargetedEvent<HTMLInputElement>
 	): void {
 		const value = e.currentTarget.value
 		const map = e.currentTarget.value.split(',').map(Number)
@@ -129,7 +128,7 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	function handleSkipEveryInput(
-		e: h.JSX.TargetedEvent<HTMLInputElement>
+		e: JSX.TargetedEvent<HTMLInputElement>
 	): void {
 		const value = e.currentTarget.value
 		setSkipEvery(value)
@@ -149,9 +148,7 @@ const Plugin = ({ selection, ui }: any) => {
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
 
-	function handleAlignRadially(
-		e: h.JSX.TargetedEvent<HTMLInputElement>
-	): void {
+	function handleAlignRadially(e: JSX.TargetedEvent<HTMLInputElement>): void {
 		const value = e.currentTarget.checked
 		setAlignRadially(value)
 		const data: Partial<TransformOptions> = {
@@ -161,7 +158,7 @@ const Plugin = ({ selection, ui }: any) => {
 	}
 
 	function handleInCanvasPreview(
-		e: h.JSX.TargetedEvent<HTMLInputElement>
+		e: JSX.TargetedEvent<HTMLInputElement>
 	): void {
 		const value = e.currentTarget.checked
 		setInCanvasPreview(value)
@@ -219,21 +216,26 @@ const Plugin = ({ selection, ui }: any) => {
 		emit('APPLY_TRANSFORMATION')
 	}
 
-	function handleSelectionChange({ state, properties }: any): void {
+	function handleSelectionChange({
+		state,
+		properties
+	}: SelectionMessage): void {
 		setSelectionState(state)
+
+		const { width, height, rotation, type } = properties
 		console.log(properties)
-		if (state === 'VALID') {
-			const { width, height, rotation, type } = properties
-			setSelectionProps({
-				width: Math.round(width),
-				height: Math.round(height),
-				rotation: Math.round(rotation),
-				type: type
-			})
-		}
+		setSelectionProps({
+			width: width,
+			height: height,
+			rotation: rotation,
+			type: type
+		})
 	}
 
-	// Debounce events
+	/**
+	 * Debounce events
+	 */
+
 	const debounceWaitTime = 200
 
 	const debounceNumItemsChange = useCallback(
@@ -251,7 +253,9 @@ const Plugin = ({ selection, ui }: any) => {
 		[]
 	)
 
-	// Emit events
+	/**
+	 * Emit to UI handlers
+	 */
 	function emitInputChange(data: any) {
 		emit('EMIT_INPUT_TO_PLUGIN', data)
 	}
@@ -260,7 +264,10 @@ const Plugin = ({ selection, ui }: any) => {
 		emit('UI_ERROR', error)
 	}
 
-	// Input validators
+	/**
+	 * Input validators
+	 */
+
 	function validateMinValue(
 		value: null | number,
 		min: number
@@ -283,7 +290,10 @@ const Plugin = ({ selection, ui }: any) => {
 		)
 	}
 
-	// Parsed values
+	/**
+	 * Parsed vals
+	 */
+
 	const parsedNumItems = parseInt(numItems)
 	const parsedRadius = parseInt(radius)
 	const parsedSkipEvery = parseInt(skipEvery)
@@ -292,9 +302,9 @@ const Plugin = ({ selection, ui }: any) => {
 	return (
 		<div
 			style={
-				inCanvasPreview
-					? '--computed-color-border: #7b61ff'
-					: '--computed-color-border: #18a0fb'
+				selectionState === 'VALID'
+					? '--computed-color-accent: #18a0fb'
+					: '--computed-color-accent: #a8a8a8'
 			}>
 			<Preview
 				uiWidth={ui.width}
@@ -325,7 +335,7 @@ const Plugin = ({ selection, ui }: any) => {
 					<Checkbox
 						onChange={handleInCanvasPreview}
 						value={inCanvasPreview}>
-						<Text>Preview on canvas</Text>
+						<Text>Canvas preview</Text>
 					</Checkbox>
 				</div>
 			</div>
@@ -334,7 +344,27 @@ const Plugin = ({ selection, ui }: any) => {
 				<Columns space="small">
 					<TextboxNumeric
 						onInput={handleNumItemsInput}
-						icon={'#'}
+						icon={
+							<svg
+								width="12"
+								height="12"
+								viewBox="0 0 12 12"
+								fill="none"
+								xmlns="http://www.w3.org/2000/svg">
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M5.25 0.75H1.5C1.08579 0.75 0.75 1.08579 0.75 1.5V5.25C0.75 5.66421 1.08579 6 1.5 6H5.25C5.66421 6 6 5.66421 6 5.25V1.5C6 1.08579 5.66421 0.75 5.25 0.75ZM1.5 0C0.671573 0 0 0.671573 0 1.5V5.25C0 6.07843 0.671573 6.75 1.5 6.75H5.25C6.07843 6.75 6.75 6.07843 6.75 5.25V1.5C6.75 0.671573 6.07843 0 5.25 0H1.5Z"
+									fill="#8C8C8C"
+								/>
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M6.17582 11.8862L6.46311 11.1934C6.5505 11.2296 6.64692 11.25 6.75 11.25H7.6875V12H6.75C6.54661 12 6.35268 11.9595 6.17582 11.8862ZM9.5625 12V11.25H10.5C10.6031 11.25 10.6995 11.2296 10.7869 11.1934L11.0742 11.8862C10.8973 11.9595 10.7034 12 10.5 12H9.5625ZM12 7.6875H11.25V6.75C11.25 6.64692 11.2296 6.5505 11.1934 6.46311L11.8862 6.17582C11.9595 6.35268 12 6.54661 12 6.75V7.6875ZM7.6875 5.25H6.75C6.54661 5.25 6.35268 5.29048 6.17582 5.36382L6.46311 6.05662C6.5505 6.02038 6.64692 6 6.75 6H7.6875V5.25ZM5.25 9.5625H6V10.5C6 10.6031 6.02038 10.6995 6.05662 10.7869L5.36382 11.0742C5.29048 10.8973 5.25 10.7034 5.25 10.5V9.5625ZM5.25 7.6875H6V6.75C6 6.64692 6.02038 6.5505 6.05662 6.46311L5.36382 6.17582C5.29048 6.35268 5.25 6.54661 5.25 6.75V7.6875ZM9.5625 5.25V6H10.5C10.6031 6 10.6995 6.02038 10.7869 6.05662L11.0742 5.36382C10.8973 5.29048 10.7034 5.25 10.5 5.25H9.5625ZM12 9.5625H11.25V10.5C11.25 10.6031 11.2296 10.6995 11.1934 10.7869L11.8862 11.0742C11.9595 10.8973 12 10.7034 12 10.5V9.5625Z"
+									fill="#8C8C8C"
+								/>
+							</svg>
+						}
 						maximum={9999}
 						value={numItems}
 						validateOnBlur={(e) => validateMinValue(e, 2)}
@@ -408,10 +438,8 @@ const Plugin = ({ selection, ui }: any) => {
 				</Columns>
 				<VerticalSpace space="medium" />
 				<Checkbox onChange={handleAlignRadially} value={alignRadially}>
-					<Text>Align instances radially</Text>
+					<Text>Align copies radially</Text>
 				</Checkbox>
-				{/* <VerticalSpace space="medium" /> */}
-
 				<VerticalSpace space="medium" />
 				<Button
 					onClick={handleButtonClick}
