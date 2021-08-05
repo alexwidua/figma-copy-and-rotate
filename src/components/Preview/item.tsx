@@ -49,7 +49,7 @@ const Item = ({
 		top: y,
 		left: x,
 		transform: `rotate(${
-			alignRadially ? angle + (rotation + 90) * -1 : rotation + -90
+			alignRadially ? angle + (rotation + 90) * -1 : rotation * -1
 		}deg)`,
 		borderRadius:
 			selectionType === 'ELLIPSE' ? '100%' : 'var(--border-radius-2)'
