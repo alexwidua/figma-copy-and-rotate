@@ -1,7 +1,3 @@
-/**
- * @file The plugin's main file.
- */
-
 import {
 	on,
 	emit,
@@ -38,10 +34,10 @@ export default function () {
 		numItems: 8,
 		radius: 50,
 		skipSelect: 'SPECIFIC',
-		skipSpecific: [0],
+		skipSpecific: [],
 		skipEvery: 0,
 		alignRadially: true,
-		sweepAngle: 360
+		sweepAngle: 315
 	}
 
 	// Carbon copy of the selected node, is used to restore node on deselect or plugin close
@@ -131,12 +127,8 @@ export default function () {
 	function componentizeNode(
 		selection: SceneNode
 	): NotificationHandler | undefined {
-		// If we componentize a selection that is made via the layer menu,
-		// it invokes the selection handler multiple times which in turn
-		// recursively compinentizes all children.
-		// Not sure if this is a bug, but we can catch it here.
 		if (!selection) {
-			return figma.notify('Please select nodes via the canvas.')
+			return figma.notify('Something went wrong with the selection.')
 		}
 		selectionRef = selection.clone()
 		insertAfterNode(selectionRef, selection)
@@ -157,7 +149,7 @@ export default function () {
 	function updateCanvasPreview(): void {
 		if (!selectionRef || !componentRef) {
 			return console.error(
-				`Couldn't update transformation. References are missing`
+				`Couldn't update transformation. References are missing.`
 			)
 		}
 		const circle: Array<InstanceNode> = instantiateAndRotate(
@@ -210,7 +202,7 @@ export default function () {
 
 		if (!selectionRef || !groupRef || !componentRef) {
 			return console.error(
-				`Couldn't apply transformation. References are missing`
+				`Couldn't apply transformation. References are missing.`
 			)
 		}
 
@@ -300,7 +292,9 @@ export default function () {
 		selectionRef = undefined
 	}
 
-	// Listeners
+	/**
+	 * Event listeners
+	 */
 	on('APPLY_TRANSFORMATION', applyTransformation)
 	on('EMIT_INPUT_TO_PLUGIN', handleUpdateFromUI)
 	on('EMIT_PREVIEW_CHANGE_TO_PLUGIN', handlePreviewChange)
@@ -308,7 +302,9 @@ export default function () {
 	figma.on('selectionchange', handleSelectionChange)
 	figma.on('close', handleClose)
 
-	// Action, baby 🎉
+	/**
+	 * Run plugin, run
+	 */
 	showUI(ui, initialData)
 	if (figma.currentPage.selection.length) {
 		const selection = figma.currentPage.selection[0]
