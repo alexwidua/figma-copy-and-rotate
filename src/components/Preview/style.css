@@ -80,7 +80,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--local-color-item-fill);
+	background: var(--local-color-item-fill-60);
+	border: 1px dashed var(--computed-color-accent);
 	box-shadow: var(--local-box-shadow);
 	transition: box-shadow 0.2s, border-radius 0.2s;
 }
@@ -89,46 +90,31 @@
 	z-index: 100;
 	box-shadow: var(--local-box-shadow-hover);
 	cursor: pointer;
-	mix-blend-mode: normal !important;
 }
 
 .item:hover .indexBadge {
 	opacity: 1 !important;
 }
 
-.container:hover .item {
-	mix-blend-mode: multiply;
-}
-
-.container:hover .indexBadge {
-	opacity: 1;
+.item.isInitial {
+	background: var(--local-color-item-fill-100);
+	/* --computed-color-accent is set via inline styles in ./ui.tsx */
+	border: 1px solid var(--computed-color-accent);
 }
 
 .item.isInitial.isRadiusHighlight {
 	border: var(--local-item-border-radius) !important;
 }
 
-.item.isInitial.isSelected {
-	/* --computed-color-border is set via inline styles in ./ui.tsx */
-	border: 1px solid var(--computed-color-border);
-}
-
 .item.isInitial:hover {
 	z-index: 0 !important;
 	box-shadow: var(--local-box-shadow);
-	mix-blend-mode: multiply !important;
 }
 
 .item.isInitial .indexBadge {
-	color: var(--local-color-purple);
-	/* background: var(--local-color-darkpurple) !important; */
+	color: var(--computed-color-accent);
 	background: #fff !important;
-	border: 1px solid var(--local-color-purple);
-}
-
-.item.isSelected {
-	/* --computed-color-border is set via inline styles in ./ui.tsx */
-	border: 1px dashed var(--computed-color-border);
+	border: 1px solid var(--computed-color-accent);
 }
 
 .item.isSkipped {
@@ -138,10 +124,6 @@
 
 .item.isRadiusHighlight {
 	border: var(--local-item-border-radius);
-}
-
-.item.showXray {
-	mix-blend-mode: multiply;
 }
 
 .item.showIndex .indexBadge {
@@ -156,7 +138,7 @@
 	min-height: var(--space-medium);
 	color: var(--local-color-white);
 	text-align: center;
-	background: var(--local-color-purple);
+	background: var(--computed-color-accent);
 	border-radius: 100%;
 	cursor: pointer;
 	opacity: 0;
@@ -164,4 +146,8 @@
 
 .indexBadge.isSkipped {
 	background: var(--local-color-item-inactive);
+}
+
+.container:hover .indexBadge {
+	opacity: 1;
 }

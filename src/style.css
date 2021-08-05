@@ -12,6 +12,11 @@
 	background: #fff;
 	border-radius: var(--local-border-radius-3);
 	box-shadow: var(--local-box-shadow-subtle);
+	transition: box-shadow 0.2s;
+}
+
+.checkboxContainer .checkbox:hover {
+	box-shadow: var(--local-box-shadow);
 }
 
 /* Wrap the ui library's <TextBox/> component to display a 'clear' icon after value input */

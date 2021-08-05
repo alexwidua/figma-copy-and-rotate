@@ -14,7 +14,8 @@
 	--local-color-container-bg: #f3f3f3;
 	--local-color-container-assistive: #cacaca;
 
-	--local-color-item-fill: var(--local-color-white);
+	--local-color-item-fill-100: rgba(255, 255, 255, 1);
+	--local-color-item-fill-60: rgba(255, 255, 255, 0.9);
 	--local-color-item-border: var(--local-color-white);
 	--local-color-item-inactive: #c7c7c7;
 

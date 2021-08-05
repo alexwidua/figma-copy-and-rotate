@@ -66,11 +66,9 @@ const Item = ({
 			onClick={() => elevateClick()}
 			class={`${style.item} 
 			${index === 0 && style.isInitial}
-			${isValidSelection && style.isSelected}
 			${isSkipped && style.isSkipped}
 			${showRadiusHelper && style.isRadiusHighlight}
 			${showNumBadge! > 0 && style.showIndex}
-			${showNumBadge! > 1 && style.showXray}
 			
 			`}
 			style={inlineItem}>
