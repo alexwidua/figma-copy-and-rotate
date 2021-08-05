@@ -2,8 +2,6 @@
  * @file Utility functions that concern page selection queries.
  */
 
-import { isWithinInstanceNode } from '@create-figma-plugin/utilities'
-
 /**
  * Checks if current selection is empty, multiple, valid or updateable.
  * @param selection - Current page selection
@@ -33,10 +31,12 @@ export function validateSelection(
 		}
 		const node: SceneNode = selection[0]
 		if (validNodeTypes.indexOf(node.type) >= 0) {
-			if (isWithinInstanceNode(node)) {
-				return 'IS_INSTANCE'
+			if (isWithinNodeType(node, 'COMPONENT')) {
+				return 'IS_WITHIN_COMPONENT'
+			} else if (isWithinNodeType(node, 'INSTANCE')) {
+				return 'IS_WITHIN_INSTANCE'
 			} else if (node.type === 'GROUP' && hasComponentChild(node)) {
-				return 'HAS_COMPONENT'
+				return 'HAS_COMPONENT_CHILD'
 			} else {
 				return 'VALID'
 			}
@@ -49,7 +49,7 @@ export function validateSelection(
 }
 
 /**
- * Recursively search for child components that would prevent componentizing parent node.
+ * Search group for component child nodes, that would throw a re-componentizing error.
  * @param selection
  * @returns - truthy value if component child has been found
  */
@@ -64,4 +64,25 @@ export function hasComponentChild(selection: SceneNode): boolean | undefined {
 		(child) => (hasComponent = hasComponentChild(child))
 	)
 	return hasComponent
+}
+
+/**
+ * Check if node is parented under certain node type.
+ * @param node
+ * @param type
+ * @returns
+ */
+export function isWithinNodeType(node: SceneNode, type: NodeType): boolean {
+	const parent = node.parent
+	if (
+		parent === null ||
+		parent.type === 'DOCUMENT' ||
+		parent.type === 'PAGE'
+	) {
+		return false
+	}
+	if (parent.type === type) {
+		return true
+	}
+	return isWithinNodeType(parent, type)
 }

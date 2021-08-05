@@ -30,9 +30,10 @@ const Plugin = ({ selection, ui }: any) => {
 	]
 	const buttonMap: SelectionStateMap = {
 		EMPTY: 'No element selected',
-		INVALID: 'Selected element type not supported',
-		IS_INSTANCE: `Can't rotate instances`,
-		HAS_COMPONENT: `Can't rotate groups containing components`,
+		INVALID: '❌ Element type not supported',
+		HAS_COMPONENT_CHILD: `Can't copy groups containing components`,
+		IS_WITHIN_COMPONENT: 'Select the parent component',
+		IS_WITHIN_INSTANCE: 'Select the parent instance',
 		MULTIPLE: 'Group multiple elements before rotation',
 		VALID: 'Apply rotation'
 	}
@@ -221,9 +222,7 @@ const Plugin = ({ selection, ui }: any) => {
 		properties
 	}: SelectionMessage): void {
 		setSelectionState(state)
-
 		const { width, height, rotation, type } = properties
-		console.log(properties)
 		setSelectionProps({
 			width: width,
 			height: height,
@@ -449,8 +448,11 @@ const Plugin = ({ selection, ui }: any) => {
 						(selectionState as SelectionState) === 'EMPTY' ||
 						(selectionState as SelectionState) === 'MULTIPLE' ||
 						(selectionState as SelectionState) ===
-							'HAS_COMPONENT' ||
-						(selectionState as SelectionState) === 'IS_INSTANCE' ||
+							'HAS_COMPONENT_CHILD' ||
+						(selectionState as SelectionState) ===
+							'IS_WITHIN_COMPONENT' ||
+						(selectionState as SelectionState) ===
+							'IS_WITHIN_INSTANCE' ||
 						mappedSkipSpecific.length === parsedNumItems - 1
 					}>
 					{buttonMap[selectionState]}

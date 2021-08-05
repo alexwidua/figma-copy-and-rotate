@@ -22,8 +22,9 @@ type SelectionState =
 	| 'MULTIPLE'
 	| 'VALID'
 	| 'INVALID'
-	| 'IS_INSTANCE'
-	| 'HAS_COMPONENT'
+	| 'HAS_COMPONENT_CHILD'
+	| 'IS_WITHIN_COMPONENT'
+	| 'IS_WITHIN_INSTANCE'
 	| 'EMPTY'
 
 /**

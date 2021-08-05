@@ -4,11 +4,12 @@ import {
 	showUI,
 	insertAfterNode,
 	insertBeforeNode,
-	collapseLayer
+	collapseLayer,
+	getSceneNodeById
 } from '@create-figma-plugin/utilities'
 import { instantiateAndRotate } from './utils/transform'
 import { createComponentInPlace } from './utils/node'
-import { validateSelection } from './utils/selection'
+import { validateSelection, isWithinNodeType } from './utils/selection'
 import { handleErrorNotification } from './utils/error'
 
 export default function () {
@@ -57,43 +58,34 @@ export default function () {
 		)
 
 		if (FLAG_SHOW_PREVIEW) {
-			// Check if selection is invalid or empty, this also handles the de-selection
 			if (
 				str.match(
-					/^(EMPTY|INVALID|IS_INSTANCE|HAS_COMPONENT|MULTIPLE)$/
+					/^(EMPTY|INVALID|HAS_COMPONENT_CHILD|IS_WITHIN_COMPONENT|IS_WITHIN_INSTANCE|MULTIPLE)$/
 				)
 			) {
 				removeRefs()
-			}
-			// Prevent user from selecting the preview group via the layer list,
-			// which would cause a chain of selectionchange events.
-			// By re-inserting the group, we force a selection of componentref.
-			// Fells like a dirty hack, so TODO: find more elegant solution.
-			else if (
-				selectionRef &&
-				groupRef &&
-				figma.currentPage.selection[0].id === groupRef.id
-			) {
-				insertAfterNode(selectionRef, groupRef)
-			}
-			// Handle if user clicks on the preview component via layer list with same hacky solution
-			else if (
-				selectionRef &&
-				componentRef &&
-				figma.currentPage.selection[0].id === componentRef.id
-			) {
-				insertBeforeNode(componentRef, selectionRef)
-			}
-			// Handle if user selects a different node without clearing the selection
-			else if (selectionRef && groupRef && componentRef) {
-				removeRefs()
-				if (figma.currentPage.selection.length) {
+			} else {
+				if (selectionRef && componentRef && groupRef) {
+					// Handle user trying to select preview group via layer list
+					if (figma.currentPage.selection[0].id === groupRef.id) {
+						insertAfterNode(selectionRef, groupRef)
+					}
+					// Handle user trying to select preview component via layer list
+					else if (
+						figma.currentPage.selection[0].id === componentRef.id
+					) {
+						insertBeforeNode(componentRef, selectionRef)
+					}
+					// Handle if user selects a different node without clearing the selection
+					else {
+						removeRefs()
+						componentizeNode(figma.currentPage.selection[0])
+						updateCanvasPreview()
+					}
+				} else {
 					componentizeNode(figma.currentPage.selection[0])
 					updateCanvasPreview()
 				}
-			} else {
-				componentizeNode(figma.currentPage.selection[0])
-				updateCanvasPreview()
 			}
 			msg = {
 				state: str,
