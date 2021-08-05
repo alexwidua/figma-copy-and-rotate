@@ -1,4 +1,15 @@
 {
+	"name": "figma-copy-and-rotate",
+	"version": "0.1.0",
+	"description": "Create rotated copies of Figma nodes.",
+	"keywords": [
+		"figma-copy-and-rotate",
+		"figma",
+		"figma-plugin",
+		"figma-plugins"
+	],
+	"license": "MIT",
+	"author": "Alexander Widua",
 	"dependencies": {
 		"@create-figma-plugin/ui": "^1.2.2",
 		"@create-figma-plugin/utilities": "^1.2.2",
@@ -16,8 +27,8 @@
 		"watch": "build-figma-plugin --typecheck --watch"
 	},
 	"figma-plugin": {
-		"id": "TODO",
-		"name": "Radial Pattern",
+		"id": "1003651932772848456",
+		"name": "Copy & Rotate",
 		"main": "src/main.ts",
 		"ui": "src/ui.tsx"
 	}
