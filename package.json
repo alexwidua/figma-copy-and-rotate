@@ -1,6 +1,6 @@
 {
 	"name": "figma-copy-and-rotate",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Create rotated copies of Figma nodes.",
 	"keywords": [
 		"figma-copy-and-rotate",
@@ -14,6 +14,13 @@
 		"@create-figma-plugin/ui": "^1.2.2",
 		"@create-figma-plugin/utilities": "^1.2.2",
 		"preact": "^10.5.14"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/alexwidua/figma-copy-and-rotate"
+	},
+	"engines": {
+		"node": ">=14"
 	},
 	"devDependencies": {
 		"@create-figma-plugin/build": "^1.2.2",
