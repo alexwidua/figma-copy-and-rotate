@@ -1,15 +1,15 @@
 import {
 	on,
+	once,
 	emit,
 	showUI,
 	insertAfterNode,
 	insertBeforeNode,
-	collapseLayer,
-	getSceneNodeById
+	collapseLayer
 } from '@create-figma-plugin/utilities'
 import { instantiateAndRotate } from './utils/transform'
 import { createComponentInPlace } from './utils/node'
-import { validateSelection, isWithinNodeType } from './utils/selection'
+import { validateSelection } from './utils/selection'
 import { handleErrorNotification } from './utils/error'
 
 export default function () {
@@ -56,6 +56,7 @@ export default function () {
 		const str: SelectionState = validateSelection(
 			figma.currentPage.selection
 		)
+		console.log(str)
 
 		if (FLAG_SHOW_PREVIEW) {
 			if (
@@ -291,6 +292,7 @@ export default function () {
 	on('EMIT_INPUT_TO_PLUGIN', handleUpdateFromUI)
 	on('EMIT_PREVIEW_CHANGE_TO_PLUGIN', handlePreviewChange)
 	on('UI_ERROR', handleErrorNotification)
+	once('EMIT_UI_READY_TO_PLUGIN', handleSelectionChange)
 	figma.on('selectionchange', handleSelectionChange)
 	figma.on('close', handleClose)
 
@@ -302,5 +304,4 @@ export default function () {
 		const selection = figma.currentPage.selection[0]
 		state = { ...state, radius: (selection.width + selection.height) / 4 }
 	}
-	handleSelectionChange()
 }

@@ -71,6 +71,7 @@ const Plugin = ({ selection, ui }: any) => {
 
 	useEffect(() => {
 		on('EMIT_SELECTION_CHANGE_TO_UI', handleSelectionChange)
+		emit('EMIT_UI_READY_TO_PLUGIN')
 	}, [])
 
 	/**
